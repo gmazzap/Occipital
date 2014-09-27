@@ -92,7 +92,7 @@ class Container implements ContainerInterface {
     private function checkSide( $side = NULL ) {
         $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
         if ( ! is_null( $side ) ) {
-            return in_array( $sides, TRUE ) ? (int) $side : FALSE;
+            return in_array( $side, $sides, TRUE ) ? (int) $side : FALSE;
         }
         if ( in_array( $this->side, $sides, TRUE )
             && ( doing_action( 'lobe_ready' ) || doing_action( "lobe_ready_{$this->side}" ) )
