@@ -21,9 +21,9 @@ class BrainModule implements \Brain\Module {
         }, -1 );
         add_action( 'lobe_done', function() use($enqueuer, $brain) {
             /** @var \Brain\Occipital\Filter $scripts */
-            $scripts = $brain[ 'lobe.scripts_filter' ];
+            $scripts = $brain[ 'lobe.scripts_filter' ]->__invoke();
             /** @var $scripts \Brain\Occipital\Filter */
-            $styles = $brain[ 'lobe.styles_filter' ];
+            $styles = $brain[ 'lobe.styles_filter' ]->__invoke();
             $enqueuer->enqueueStyles( $styles );
             $enqueuer->enqueueScripts( $scripts );
             $enqueuer->registerProvided();
@@ -49,6 +49,7 @@ class BrainModule implements \Brain\Module {
                 $all_scripts->addAll( $side_scripts );
                 return new Filter( $all_scripts );
             }
+            throw new \RuntimeException( '', 'lobe-too-early-for-filter' );
         } );
         $brain[ 'lobe.styles_filter' ] = $brain->protect( function( $c ) {
             /** @var \Brain\Occipital\Container $container */
@@ -61,7 +62,7 @@ class BrainModule implements \Brain\Module {
                 $all_styles->addAll( $side_styles );
                 return new Filter( $all_styles, $container->getSide(), $c[ 'lobe.admin_page' ] );
             }
-            throw new \RuntimeException( '', 'lobe-too-early-for-filters' );
+            throw new \RuntimeException( '', 'lobe-too-early-for-filter' );
         } );
         $brain[ 'lobe.api' ] = function($c) {
             return new API( $c[ 'lobe.container' ] );
