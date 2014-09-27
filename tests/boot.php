@@ -17,5 +17,3 @@ if ( ! class_exists( 'WP_Scripts' ) ) {
     require_once __DIR__ . '/helpers/wp-scripts.php';
 }
 require_once __DIR__ . '/helpers/wp-functions.php';
-
-
