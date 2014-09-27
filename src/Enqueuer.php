@@ -1,4 +1,4 @@
-<?php namespace Brain\Lobe;
+<?php namespace Brain\Occipital;
 
 class Enqueuer implements EnqueuerInterface {
 
@@ -6,7 +6,7 @@ class Enqueuer implements EnqueuerInterface {
 
     public function enqueueScripts( \Iterator $scripts ) {
         $provided = [ ];
-        /** @type \Brain\Lobe\ScriptInterface $script */
+        /** @type \Brain\Occipital\ScriptInterface $script */
         foreach ( $scripts as $script ) {
             $args = $this->getAssetArgs( $script );
             $provided = array_merge( $provided, $script->getProvide() );
@@ -22,7 +22,7 @@ class Enqueuer implements EnqueuerInterface {
 
     public function enqueueStyles( \Iterator $styles ) {
         $provided = [ ];
-        /** @type \Brain\Lobe\StyleInterface $style */
+        /** @type \Brain\Occipital\StyleInterface $style */
         foreach ( $styles as $style ) {
             $provided = array_merge( $provided, $style->getProvide() );
             call_user_func_array( 'wp_enqueue_style', $this->getAssetArgs( $style ) );

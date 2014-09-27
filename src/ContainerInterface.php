@@ -1,4 +1,4 @@
-<?php namespace Brain\Lobe;
+<?php namespace Brain\Occipital;
 
 interface ContainerInterface {
 
@@ -10,14 +10,14 @@ interface ContainerInterface {
     /**
      * Add a script in the container
      *
-     * @param \Brain\Lobe\ScriptInterface $script
+     * @param \Brain\Occipital\ScriptInterface $script
      */
     function addScript( ScriptInterface $script );
 
     /**
      * Add a style in the container
      *
-     * @param \Brain\Lobe\StyleInterface $style
+     * @param \Brain\Occipital\StyleInterface $style
      */
     function addStyle( StyleInterface $style );
 

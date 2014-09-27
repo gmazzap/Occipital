@@ -1,4 +1,4 @@
-<?php namespace Brain\Lobe;
+<?php namespace Brain\Occipital;
 
 class Filter extends \FilterIterator implements FilterInterface {
 
@@ -12,7 +12,7 @@ class Filter extends \FilterIterator implements FilterInterface {
     }
 
     public function accept() {
-        /** @var \Brain\Lobe\Enqueuable $asset */
+        /** @var \Brain\Occipital\Enqueuable $asset */
         $asset = $this->getInnerIterator()->current();
         $condition = $asset->getCondition();
         if ( empty( $condition ) ) {

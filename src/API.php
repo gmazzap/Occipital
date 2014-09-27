@@ -1,4 +1,4 @@
-<?php namespace Brain\Lobe;
+<?php namespace Brain\Occipital;
 
 class API {
 
@@ -20,7 +20,7 @@ class API {
      * @param array $data       An array of properties to set in asset object
      * @param int|string $where Where add the script: backend, frontend or login page.
      * @param string $class     Alternative class name for the asset, must instantiare proper interface
-     * @return \Brain\Lobe\EnqueuableInterface|\WP_Error
+     * @return \Brain\Occipital\EnqueuableInterface|\WP_Error
      * @throws \InvalidArgumentException
      */
     public function add( $what, $handle, Array $data = [ ], $where = NULL, $class = NULL ) {
@@ -59,7 +59,7 @@ class API {
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
      * @param int|string $where Where add the script: backend, frontend or login page.
-     * @return \Brain\Lobe\ScriptInterface|\WP_Error
+     * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addScript( $handle, Array $data = [ ], $where ) {
         return $this->add( self::SCRIPT, $handle, $data, $where );
@@ -71,7 +71,7 @@ class API {
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
      * @param int|string $where Where add the script: backend, frontend or login page.
-     * @return \Brain\Lobe\StyleInterface|\WP_Error
+     * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addStyle( $handle, Array $data = [ ], $where = NULL ) {
         return $this->add( self::STYLE, $handle, $data, $where = NULL );
@@ -82,7 +82,7 @@ class API {
      *
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
-     * @return \Brain\Lobe\ScriptInterface|\WP_Error
+     * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addFrontScript( $handle, Array $data = [ ] ) {
         return $this->addScript( $handle, $data, Container::FRONT );
@@ -93,7 +93,7 @@ class API {
      *
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
-     * @return \Brain\Lobe\ScriptInterface|\WP_Error
+     * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addAdminScript( $handle, Array $data = [ ] ) {
         return $this->addScript( $handle, $data, Container::ADMIN );
@@ -104,7 +104,7 @@ class API {
      *
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
-     * @return \Brain\Lobe\ScriptInterface|\WP_Error
+     * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addLoginScript( $handle, Array $data = [ ] ) {
         return $this->addScript( $handle, $data, Container::LOGIN );
@@ -115,7 +115,7 @@ class API {
      *
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
-     * @return \Brain\Lobe\ScriptInterface|\WP_Error
+     * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addSiteScript( $handle, Array $data = [ ] ) {
         return $this->addScript( $handle, $data, Container::ALL );
@@ -126,7 +126,7 @@ class API {
      *
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
-     * @return \Brain\Lobe\StyleInterface|\WP_Error
+     * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addFrontStyle( $handle, Array $data = [ ] ) {
         return $this->addStyle( $handle, $data, Container::ALL );
@@ -137,7 +137,7 @@ class API {
      *
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
-     * @return \Brain\Lobe\StyleInterface|\WP_Error
+     * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addAdminStyle( $handle, Array $data = [ ] ) {
         return $this->addStyle( $handle, $data, Container::ADMIN );
@@ -148,7 +148,7 @@ class API {
      *
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
-     * @return \Brain\Lobe\StyleInterface|\WP_Error
+     * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addLoginStyle( $handle, Array $data = [ ] ) {
         return $this->addStyle( $handle, $data, Container::ADMIN );
@@ -159,7 +159,7 @@ class API {
      *
      * @param string $handle    The asset handle
      * @param array $data       An array of properties to set in asset object
-     * @return \Brain\Lobe\StyleInterface|\WP_Error
+     * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addSiteStyle( $handle, Array $data = [ ] ) {
         return $this->addStyle( $handle, $data, Container::ALL );
@@ -190,7 +190,7 @@ class API {
      * @internal
      */
     private function getAssetClass( $what, $class ) {
-        $default = $what === self::SCRIPT ? 'Brain\Lobe\Script' : 'Brain\Lobe\Style';
+        $default = $what === self::SCRIPT ? 'Brain\Occipital\Script' : 'Brain\Occipital\Style';
         if ( is_null( $class ) ) {
             $class = $default;
         }

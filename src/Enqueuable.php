@@ -1,4 +1,4 @@
-<?php namespace Brain\Lobe;
+<?php namespace Brain\Occipital;
 
 abstract class Enqueuable implements EnqueuableInterface {
 

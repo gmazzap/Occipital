@@ -1,4 +1,4 @@
-<?php namespace Brain\Lobe\Tests;
+<?php namespace Brain\Occipital\Tests;
 
 use Brain\Container as Brain;
 

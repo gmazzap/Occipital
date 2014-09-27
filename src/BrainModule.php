@@ -1,4 +1,4 @@
-<?php namespace Brain\Lobe;
+<?php namespace Brain\Occipital;
 
 class BrainModule implements \Brain\Module {
 
@@ -14,15 +14,15 @@ class BrainModule implements \Brain\Module {
         add_action( 'admin_enqueue_script', function( $page ) use($brain) {
             $brain[ 'lobe.admin_page' ] = $page;
         }, -1 );
-        /** @var \Brain\Lobe\Enqueuer $enqueuer */
+        /** @var \Brain\Occipital\Enqueuer $enqueuer */
         $enqueuer = $brain[ 'lobe.enqueuer' ];
         add_action( 'lobe_ready', function( $side ) use($enqueuer) {
             $enqueuer->setSide( $side );
         }, -1 );
         add_action( 'lobe_done', function() use($enqueuer, $brain) {
-            /** @var \Brain\Lobe\Filter $scripts */
+            /** @var \Brain\Occipital\Filter $scripts */
             $scripts = $brain[ 'lobe.scripts_filter' ];
-            /** @var $scripts \Brain\Lobe\Filter */
+            /** @var $scripts \Brain\Occipital\Filter */
             $styles = $brain[ 'lobe.styles_filter' ];
             $enqueuer->enqueueStyles( $styles );
             $enqueuer->enqueueScripts( $scripts );
@@ -41,7 +41,7 @@ class BrainModule implements \Brain\Module {
             return new Enqueuer;
         };
         $brain[ 'lobe.scripts_filter' ] = $brain->protect( function( $c ) {
-            /** @var \Brain\Lobe\Container $container */
+            /** @var \Brain\Occipital\Container $container */
             $container = $c[ 'lobe.container' ];
             if ( $container->checkSide() ) {
                 /** @var \SplObjectStorage $side_scripts */
@@ -53,7 +53,7 @@ class BrainModule implements \Brain\Module {
             }
         } );
         $brain[ 'lobe.styles_filter' ] = $brain->protect( function( $c ) {
-            /** @var \Brain\Lobe\Container $container */
+            /** @var \Brain\Occipital\Container $container */
             $container = $c[ 'lobe.container' ];
             if ( $container->checkSide() ) {
                 /** @var \SplObjectStorage $side_styles */

@@ -1,6 +1,6 @@
 {
-    "name": "brain/lobe",
-    "description": "Lobe is a package for asset management in WordPress.",
+    "name": "brain/occipital",
+    "description": "Occipital is a package for asset management in WordPress.",
     "keywords": ["wordpress"],
     "homepage": "https://github.com/Giuseppe-Mazzapica/Cortex",
     "license": "GPL-2.0+",
@@ -28,13 +28,13 @@
     },
     "autoload": {
         "psr-4": {
-            "Brain\\Lobe\\": "src/"
+            "Brain\\Occipital\\": "src/"
         },
         "classmap": ["Assets.php"]
     },
     "autoload-dev": {
         "psr-4": {
-            "Brain\\Lobe\\Tests\\": "tests/src/"
+            "Brain\\Occipital\\Tests\\": "tests/src/"
         }
     },
     "config": {
