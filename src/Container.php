@@ -58,8 +58,8 @@ class Container implements ContainerInterface {
         add_action( 'login_enqueue_scripts', function() {
             $this->side = self::LOGIN;
             $this->setStorage( $this->side );
-            do_action( 'lobe_ready', 'login', $this );
-            do_action( 'lobe_ready_login', $this );
+            do_action( 'lobe_ready', $this->side, $this );
+            do_action( "lobe_ready_{$this->side}", $this );
             do_action( 'lobe_done' );
         } );
     }
@@ -68,8 +68,8 @@ class Container implements ContainerInterface {
         add_action( 'admin_enqueue_styles', function($page) {
             $this->side = self::ADMIN;
             $this->setStorage( $this->side );
-            do_action( 'lobe_ready', 'admin', $this, $page );
-            do_action( 'lobe_ready_admin', $this, $page );
+            do_action( 'lobe_ready', $this->side, $this, $page );
+            do_action( "lobe_ready_{$this->side}", $this, $page );
             do_action( 'lobe_done' );
         } );
     }
@@ -78,8 +78,8 @@ class Container implements ContainerInterface {
         add_action( 'wp_enqueue_styles', function() {
             $this->side = self::FRONT;
             $this->setStorage( $this->side );
-            do_action( 'lobe_ready', 'front', $this );
-            do_action( 'lobe_ready_admin', $this );
+            do_action( 'lobe_ready', $this->side, $this );
+            do_action( "lobe_ready_{$this->side}", $this );
             do_action( 'lobe_done' );
         } );
     }
@@ -94,8 +94,8 @@ class Container implements ContainerInterface {
         if ( ! is_null( $side ) ) {
             return in_array( $sides, TRUE ) ? (int) $side : FALSE;
         }
-        if ( did_action( 'lobe_ready' )
-            && in_array( $this->side, $sides, TRUE )
+        if ( in_array( $this->side, $sides, TRUE )
+            && ( doing_action( 'lobe_ready' ) || doing_action( "lobe_ready_{$this->side}" ) )
             && isset( $this->scripts[ $this->side ] )
             && isset( $this->styles[ $this->side ] )
             && $this->scripts[ $this->side ] instanceof \SplObjectStorage
