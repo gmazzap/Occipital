@@ -12,8 +12,9 @@ class Enqueuer implements EnqueuerInterface {
             $provided = array_merge( $provided, $script->getProvide() );
             call_user_func_array( 'wp_enqueue_script', $args );
             $data = $script->getLocalizeData();
-            if ( $data instanceof stdClass && isset( $data->name ) && isset( $data->data ) ) {
-                wp_localize_script( $args[ 0 ], $data->name, (array) $data->data );
+            if ( is_object( $data ) && isset( $data->name ) ) {
+                $data = isset( $data->data ) ? (array) $data->data : [ ];
+                wp_localize_script( $args[ 0 ], $data->name, $data );
             }
         }
         $this->provided[ 'scripts' ] = array_filter( array_unique( array_values( $provided ) ) );
