@@ -61,7 +61,7 @@ class Container implements ContainerInterface {
             do_action( 'lobe_ready', $this->side, $this );
             do_action( "lobe_ready_{$this->side}", $this );
             do_action( 'lobe_done' );
-        } );
+        }, -1 );
     }
 
     private function initAdmin() {
@@ -71,7 +71,7 @@ class Container implements ContainerInterface {
             do_action( 'lobe_ready', $this->side, $this, $page );
             do_action( "lobe_ready_{$this->side}", $this, $page );
             do_action( 'lobe_done' );
-        } );
+        }, -1 );
     }
 
     private function initFront() {
@@ -81,7 +81,7 @@ class Container implements ContainerInterface {
             do_action( 'lobe_ready', $this->side, $this );
             do_action( "lobe_ready_{$this->side}", $this );
             do_action( 'lobe_done' );
-        } );
+        }, -1 );
     }
 
     private function setStorage( $side ) {

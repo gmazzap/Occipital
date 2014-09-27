@@ -26,10 +26,8 @@ class BrainModule implements \Brain\Module {
             $styles = $brain[ 'lobe.styles_filter' ];
             $enqueuer->enqueueStyles( $styles );
             $enqueuer->enqueueScripts( $scripts );
-        }, PHP_INT_MAX );
-        add_action( "wp_head", function() use($enqueuer) {
             $enqueuer->registerProvided();
-        }, -1 );
+        }, PHP_INT_MAX );
     }
 
     public function getBindings( \Brain\Container $brain ) {
