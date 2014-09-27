@@ -1,6 +1,5 @@
-<?php namespace Brain\Occipital\Tests\Unit;
+<?php namespace Brain\Occipital\Tests;
 
-use Brain\Occipital\Tests\TestCase;
 use Brain\Occipital\Container;
 
 class ContainerTest extends TestCase {
