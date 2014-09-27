@@ -2,7 +2,13 @@
 
 class BrainModule implements \Brain\Module {
 
+    static $booted;
+
     public function boot( \Brain\Container $brain ) {
+        if ( self::$booted ) {
+            return;
+        }
+        self::$booted = TRUE;
         /**
          * Thanks to Thomas Scholz (toscho)
          * @see http://wordpress.stackexchange.com/a/127836/
