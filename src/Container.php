@@ -16,22 +16,22 @@ class Container implements ContainerInterface {
         is_admin() ? $this->initAdmin() : $this->initFront();
     }
 
-    public function addScript( ScriptInterface $s, $side = NULL ) {
+    public function addScript( ScriptInterface $script, $side = NULL ) {
         $where = $this->checkSide( $side );
         if ( ! $where ) {
             throw new \UnexpectedValueException;
         }
-        $this->scripts[ $where ]->attach( $s );
-        return $s;
+        $this->scripts[ $where ]->attach( $script );
+        return $script;
     }
 
-    public function addStyle( StyleInterface $s, $side = NULL ) {
+    public function addStyle( StyleInterface $style, $side = NULL ) {
         $where = $this->checkSide( $side );
         if ( ! $where ) {
             throw new \UnexpectedValueException;
         }
-        $this->styles[ $where ]->attach( $s );
-        return $s;
+        $this->styles[ $where ]->attach( $style );
+        return $style;
     }
 
     public function getScripts( $side = NULL ) {
@@ -99,7 +99,8 @@ class Container implements ContainerInterface {
             && isset( $this->scripts[ $this->side ] )
             && isset( $this->styles[ $this->side ] )
             && $this->scripts[ $this->side ] instanceof \SplObjectStorage
-            && $this->styles[ $this->side ] instanceof \SplObjectStorage ) {
+            && $this->styles[ $this->side ] instanceof \SplObjectStorage
+        ) {
             return $this->side;
         }
         return FALSE;
