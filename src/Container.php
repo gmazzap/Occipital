@@ -62,6 +62,32 @@ class Container implements ContainerInterface {
         return $this->side;
     }
 
+    public function getSideStyles() {
+        $side = $this->getSide();
+        if ( empty( $side ) ) {
+            throw new \RuntimeException( '', 'lobe-too-early-for-side-scripts' );
+        }
+        /** @var \SplObjectStorage $side_styles */
+        $side_styles = $this->getStyles( $this->getSide() );
+        /** @var \SplObjectStorage $all_styles */
+        $all_styles = $this->getStyles( Container::ALL );
+        $all_styles->addAll( $side_styles );
+        return $all_styles;
+    }
+
+    public function getSideScrypts() {
+        $side = $this->getSide();
+        if ( empty( $side ) ) {
+            throw new \RuntimeException( '', 'lobe-too-early-for-side-scripts' );
+        }
+        /** @var \SplObjectStorage $side_scripts */
+        $side_scripts = $this->getScripts( $this->getSide() );
+        /** @var \SplObjectStorage $all_scripts */
+        $all_scripts = $this->getScripts( Container::ALL );
+        $all_scripts->addAll( $side_scripts );
+        return $all_scripts;
+    }
+
     private function initLogin() {
         add_action( 'login_enqueue_scripts', function() {
             $this->side = self::LOGIN;
