@@ -14,7 +14,7 @@ class BrainModule implements \Brain\Module {
          * @see http://wordpress.stackexchange.com/a/127836/
          */
         if ( ! has_action( 'login_enqueue_scripts', 'wp_print_styles' ) ) {
-            add_action( 'login_enqueue_scripts', 'wp_print_styles', 11 );
+            add_action( 'login_enqueue_scripts', 'wp_print_styles', 99999 );
         }
         $brain[ 'lobe.container' ]->init();
         add_action( 'admin_enqueue_script', function( $page ) use($brain) {
