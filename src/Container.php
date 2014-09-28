@@ -2,13 +2,15 @@
 
 class Container implements ContainerInterface {
 
+    private static $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
     private $scripts = [ ];
     private $styles = [ ];
     private $side;
 
     public function __construct() {
-        $this->styles[ self::ALL ] = new \SplObjectStorage;
-        $this->scripts[ self::ALL ] = new \SplObjectStorage;
+        foreach ( self::$sides as $side ) {
+            $this->setStorage( $side );
+        }
     }
 
     public function init() {
@@ -21,7 +23,7 @@ class Container implements ContainerInterface {
         if ( ! $where ) {
             throw new \UnexpectedValueException;
         }
-        $this->scripts[ $where ]->attach( $script );
+        $this->getScripts( $where )->attach( $script );
         return $script;
     }
 
@@ -30,24 +32,30 @@ class Container implements ContainerInterface {
         if ( ! $where ) {
             throw new \UnexpectedValueException;
         }
-        $this->styles[ $where ]->attach( $style );
+        $this->getStyles( $where )->attach( $style );
         return $style;
     }
 
     public function getScripts( $side = NULL ) {
         $scripts = $this->scripts;
-        if ( ! is_null( $side ) && $this->checkSide() ) {
-            $scripts = $scripts[ $side ];
+        if ( is_null( $side ) ) {
+            return $scripts;
         }
-        return $scripts;
+        if ( in_array( $side, self::$sides, TRUE ) && isset( $scripts[ $side ] ) ) {
+            return $scripts[ $side ];
+        }
+        throw new \InvalidArgumentException;
     }
 
     public function getStyles( $side = NULL ) {
-        $styles = $this->scripts;
-        if ( ! is_null( $side ) && $this->checkSide() ) {
-            $styles = $styles[ $side ];
+        $styles = $this->styles;
+        if ( is_null( $side ) ) {
+            return $styles;
         }
-        return $styles;
+        if ( in_array( $side, self::$sides, TRUE ) && isset( $styles[ $side ] ) ) {
+            return $styles[ $side ];
+        }
+        throw new \InvalidArgumentException;
     }
 
     public function getSide() {
@@ -57,9 +65,9 @@ class Container implements ContainerInterface {
     private function initLogin() {
         add_action( 'login_enqueue_scripts', function() {
             $this->side = self::LOGIN;
-            $this->setStorage( $this->side );
             do_action( 'lobe_ready', $this->side, $this );
             do_action( "lobe_ready_{$this->side}", $this );
+            $this->unsetStorage( [ self::ADMIN, self::FRONT ] );
             do_action( 'lobe_done' );
         }, -1 );
     }
@@ -67,9 +75,9 @@ class Container implements ContainerInterface {
     private function initAdmin() {
         add_action( 'admin_enqueue_styles', function($page) {
             $this->side = self::ADMIN;
-            $this->setStorage( $this->side );
             do_action( 'lobe_ready', $this->side, $this, $page );
             do_action( "lobe_ready_{$this->side}", $this, $page );
+            $this->unsetStorage( [ self::LOGIN, self::FRONT ] );
             do_action( 'lobe_done' );
         }, -1 );
     }
@@ -77,31 +85,40 @@ class Container implements ContainerInterface {
     private function initFront() {
         add_action( 'wp_enqueue_styles', function() {
             $this->side = self::FRONT;
-            $this->setStorage( $this->side );
             do_action( 'lobe_ready', $this->side, $this );
             do_action( "lobe_ready_{$this->side}", $this );
+            $this->unsetStorage( [ self::LOGIN, self::ADMIN ] );
             do_action( 'lobe_done' );
         }, -1 );
     }
 
     private function setStorage( $side ) {
-        $this->scripts[ $side ] = new \SplObjectStorage;
         $this->styles[ $side ] = new \SplObjectStorage;
+        $this->scripts[ $side ] = new \SplObjectStorage;
+    }
+
+    private function unsetStorage( $sides ) {
+        foreach ( $sides as $side ) {
+            if ( isset( $this->scripts[ $side ] ) ) {
+                $this->scripts[ $side ] = NULL;
+                unset( $this->scripts[ $side ] );
+            }
+        }
     }
 
     private function checkSide( $side = NULL ) {
-        $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
-        if ( ! is_null( $side ) ) {
-            return in_array( $side, $sides, TRUE ) ? (int) $side : FALSE;
+        if ( did_action( 'lobe_done' ) ) {
+            return FALSE;
         }
-        if ( in_array( $this->side, $sides, TRUE )
-            && ( doing_action( 'lobe_ready' ) || doing_action( "lobe_ready_{$this->side}" ) )
-            && isset( $this->scripts[ $this->side ] )
-            && isset( $this->styles[ $this->side ] )
-            && $this->scripts[ $this->side ] instanceof \SplObjectStorage
-            && $this->styles[ $this->side ] instanceof \SplObjectStorage
-        ) {
-            return $this->side;
+        $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
+        if ( is_null( $side ) ) {
+            $side = $this->getSide();
+        }
+        if ( is_null( $side ) || ! in_array( $side, $sides, TRUE ) ) {
+            return FALSE;
+        }
+        if ( $side === self::ALL || ( $side === $this->getSide() || ! did_action( 'lobe_ready' ) ) ) {
+            return $side;
         }
         return FALSE;
     }
