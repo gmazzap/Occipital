@@ -9,10 +9,6 @@ class BrainModule implements \Brain\Module {
             return;
         }
         self::$booted = TRUE;
-        /**
-         * Thanks to Thomas Scholz (toscho)
-         * @see http://wordpress.stackexchange.com/a/127836/
-         */
         if ( ! has_action( 'login_enqueue_scripts', 'wp_print_styles' ) ) {
             add_action( 'login_enqueue_scripts', 'wp_print_styles', 99999 );
         }
@@ -20,19 +16,8 @@ class BrainModule implements \Brain\Module {
         add_action( 'admin_enqueue_script', function( $page ) use($brain) {
             $brain[ 'lobe.admin_page' ] = $page;
         }, -1 );
-        /** @var \Brain\Occipital\Enqueuer $enqueuer */
-        $enqueuer = $brain[ 'lobe.enqueuer' ];
-        add_action( 'lobe_ready', function( $side ) use($enqueuer) {
-            $enqueuer->setSide( $side );
-        }, -1 );
-        add_action( 'lobe_done', function() use($enqueuer, $brain) {
-            /** @var \Brain\Occipital\Filter $scripts */
-            $scripts = $brain[ 'lobe.scripts_filter' ]->__invoke();
-            /** @var $scripts \Brain\Occipital\Filter */
-            $styles = $brain[ 'lobe.styles_filter' ]->__invoke();
-            $enqueuer->enqueueStyles( $styles );
-            $enqueuer->enqueueScripts( $scripts );
-            $enqueuer->registerProvided();
+        add_action( 'lobe_done', function() use($brain) {
+            $brain[ 'lobe.worker' ]->work();
         }, PHP_INT_MAX );
     }
 
@@ -44,32 +29,25 @@ class BrainModule implements \Brain\Module {
         $brain[ 'lobe.enqueuer' ] = function() {
             return new Enqueuer;
         };
-        $brain[ 'lobe.scripts_filter' ] = $brain->protect( function( $c ) {
+        $brain[ 'lobe.scripts' ] = $brain->protect( function( $c ) {
             /** @var \Brain\Occipital\Container $container */
             $container = $c[ 'lobe.container' ];
             if ( $container->checkSide() ) {
-                /** @var \SplObjectStorage $side_scripts */
-                $side_scripts = $c[ 'lobe.container' ]->getScripts( $container->getSide() );
-                /** @var \SplObjectStorage $all_scripts */
-                $all_scripts = $c[ 'lobe.container' ]->getScripts( Container::ALL );
-                $all_scripts->addAll( $side_scripts );
-                return new Filter( $all_scripts );
+                $side = $container->getSide();
+                return new Filter( $container->getSideScripts(), $side, $c[ 'lobe.admin_page' ] );
             }
-            throw new \RuntimeException( '', 'lobe-too-early-for-filter' );
         } );
-        $brain[ 'lobe.styles_filter' ] = $brain->protect( function( $c ) {
+        $brain[ 'lobe.styles' ] = $brain->protect( function( $c ) {
             /** @var \Brain\Occipital\Container $container */
             $container = $c[ 'lobe.container' ];
+            $side = $container->getSide();
             if ( $container->checkSide() ) {
-                /** @var \SplObjectStorage $side_styles */
-                $side_styles = $c[ 'lobe.container' ]->getStyles( $container->getSide() );
-                /** @var \SplObjectStorage $all_styles */
-                $all_styles = $c[ 'lobe.container' ]->getStyles( Container::ALL );
-                $all_styles->addAll( $side_styles );
-                return new Filter( $all_styles, $container->getSide(), $c[ 'lobe.admin_page' ] );
+                return new Filter( $container->getSideStyles(), $side, $c[ 'lobe.admin_page' ] );
             }
-            throw new \RuntimeException( '', 'lobe-too-early-for-filter' );
         } );
+        $brain[ 'lobe.worker' ] = function($c) {
+            return new Worker( $c[ 'lobe.enqueuer' ], $c[ 'lobe.scripts' ], $c[ 'lobe.styles' ] );
+        };
         $brain[ 'lobe.api' ] = function($c) {
             return new API( $c[ 'lobe.container' ] );
         };
