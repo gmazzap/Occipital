@@ -18,8 +18,8 @@ class BrainModule implements \Brain\Module {
         }, -1 );
         add_action( 'lobe_done', function() use($brain) {
             $enqueuer = $brain[ 'lobe.enqueuer' ];
-            $enqueuer->enqueueStyles();
-            $enqueuer->enqueueScripts();
+            $enqueuer->enqueueStyles( $brain[ 'lobe.styles' ] );
+            $enqueuer->enqueueScripts( $brain[ 'lobe.scripts' ] );
             $enqueuer->registerProvided();
         }, PHP_INT_MAX );
     }
@@ -35,18 +35,14 @@ class BrainModule implements \Brain\Module {
         $brain[ 'lobe.scripts' ] = $brain->protect( function() use($brain) {
             /** @var \Brain\Occipital\Container $container */
             $container = $brain[ 'lobe.container' ];
-            if ( $container->checkSide() ) {
-                $side = $container->getSide();
-                return new Filter( $container->getSideScripts(), $side, $brain[ 'lobe.admin_page' ] );
-            }
+            $side = $container->getSide();
+            return new Filter( $container->getSideScripts(), $side, $brain[ 'lobe.admin_page' ] );
         } );
         $brain[ 'lobe.styles' ] = $brain->protect( function() use($brain) {
             /** @var \Brain\Occipital\Container $container */
             $container = $brain[ 'lobe.container' ];
             $side = $container->getSide();
-            if ( $container->checkSide() ) {
-                return new Filter( $container->getSideStyles(), $side, $brain[ 'lobe.admin_page' ] );
-            }
+            return new Filter( $container->getSideStyles(), $side, $brain[ 'lobe.admin_page' ] );
         } );
         $brain[ 'lobe.api' ] = function($c) {
             return new API( $c[ 'lobe.container' ] );
