@@ -23,11 +23,15 @@ interface ContainerInterface {
 
     /**
      * Get added styles
+     *
+     * * @return \Iterator
      */
     function getStyles();
 
     /**
      * Get added scripts
+     *
+     * * @return \Iterator
      */
     function getScripts();
 
@@ -37,4 +41,18 @@ interface ContainerInterface {
      * @return int Current side constant
      */
     public function getSide();
+
+    /**
+     * Get added styles specific for current side
+     *
+     * @return \Iterator
+     */
+    public function getSideStyles();
+
+    /**
+     * Get added styles specific for current side
+     *
+     * * @return \Iterator
+     */
+    public function getSideScrypts();
 }
