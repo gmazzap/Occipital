@@ -11,7 +11,7 @@ class Assets extends Facade {
             return;
         }
         add_action( 'brain_init', function( $brain ) {
-            $brain->addModule( new Lobe\BrainModule );
+            $brain->addModule( new Occipital\BrainModule );
         } );
     }
 
