@@ -51,7 +51,7 @@ class API {
      * @param int|string $where Where add the script: backend, frontend or login page.
      * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
-    public function addScript( $handle, Array $data = [ ], $where ) {
+    public function addScript( $handle, Array $data = [ ], $where = NULL ) {
         return $this->add( self::SCRIPT, $handle, $data, $where );
     }
 
@@ -64,7 +64,7 @@ class API {
      * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addStyle( $handle, Array $data = [ ], $where = NULL ) {
-        return $this->add( self::STYLE, $handle, $data, $where = NULL );
+        return $this->add( self::STYLE, $handle, $data, $where );
     }
 
     /**
