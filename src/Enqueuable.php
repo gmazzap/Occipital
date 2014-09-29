@@ -40,7 +40,7 @@ abstract class Enqueuable implements EnqueuableInterface {
         return $this->getContext( 'context', 'ver' );
     }
 
-    public function getProvide() {
+    public function getProvided() {
         return $this->getContext( 'context', 'provide' ) ? : [ ];
     }
 
@@ -80,7 +80,7 @@ abstract class Enqueuable implements EnqueuableInterface {
         return $this;
     }
 
-    public function setProvide( $provided ) {
+    public function setProvided( $provided ) {
         $sane = $this->sanitizeArray( $provided );
         if ( is_array( $sane ) ) {
             $this->setContext( 'context', 'provide', $sane );
@@ -89,7 +89,7 @@ abstract class Enqueuable implements EnqueuableInterface {
     }
 
     private function sanitizeArray( $var ) {
-        if ( ! is_string( $var ) || ! is_array( $var ) ) {
+        if ( ! is_string( $var ) && ! is_array( $var ) ) {
             return FALSE;
         }
         $filtered = array_filter( (array) $var, function( $el ) {

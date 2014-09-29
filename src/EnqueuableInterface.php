@@ -65,12 +65,12 @@ interface EnqueuableInterface {
     /**
      * Getter for other assets current asset provides
      */
-    public function getProvide();
+    public function getProvided();
 
     /**
      * Setter for other assets current asset provides
      *
      * @param string|array $provided
      */
-    public function setProvide( $provided );
+    public function setProvided( $provided );
 }

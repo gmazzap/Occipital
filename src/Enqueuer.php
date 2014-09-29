@@ -14,7 +14,7 @@ class Enqueuer implements EnqueuerInterface {
         /** @type \Brain\Occipital\ScriptInterface $script */
         foreach ( $scripts as $script ) {
             $args = $this->getAssetArgs( $script );
-            $provided = array_merge( $provided, $script->getProvide() );
+            $provided = array_merge( $provided, $script->getProvided() );
             call_user_func_array( 'wp_enqueue_script', $args );
             $data = $script->getLocalizeData();
             if ( is_object( $data ) && isset( $data->name ) ) {
@@ -34,7 +34,7 @@ class Enqueuer implements EnqueuerInterface {
         $provided = [ ];
         /** @type \Brain\Occipital\StyleInterface $style */
         foreach ( $styles as $style ) {
-            $provided = array_merge( $provided, $style->getProvide() );
+            $provided = array_merge( $provided, $style->getProvided() );
             call_user_func_array( 'wp_enqueue_style', $this->getAssetArgs( $style ) );
         }
         $this->provided[ 'styles' ] = array_filter( array_unique( array_values( $provided ) ) );
