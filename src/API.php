@@ -32,21 +32,11 @@ class API {
             if ( ! $args ) {
                 throw new \InvalidArgumentException;
             }
-            $cb = $args[ 'what' ] === self::SCRIPT ? 'addScript' : 'addStyle';
-            $asset_class = $this->getAssetClass( $args[ 'what' ], $args[ 'class' ] );
-            $asset = new $asset_class( $args[ 'handle' ] );
-            if ( ! empty( $data ) ) {
-                $valid = array_filter( array_keys( $data ), function( $prop ) use($asset) {
-                    return method_exists( $asset, 'set' . ucfirst( $prop ) );
-                } );
-                if ( empty( $valid ) ) {
-                    return $asset;
-                }
-                foreach ( $valid as $key ) {
-                    $method = 'set' . ucfirst( $key );
-                    $asset->$method( $data[ $key ] );
-                }
+            $asset = $this->getAssetToAdd( $args, $data );
+            if ( ! $asset instanceof EnqueuableInterface ) {
+                throw new \UnexpectedValueException;
             }
+            $cb = $asset instanceof ScriptInterface ? 'addScript' : 'addStyle';
             return $this->container->$cb( $asset, $args[ 'where' ] );
         } catch ( \Exception $e ) {
             return \Brain\exception2WPError( $e, 'lobe' );
@@ -163,6 +153,27 @@ class API {
      */
     public function addSiteStyle( $handle, Array $data = [ ] ) {
         return $this->addStyle( $handle, $data, Container::ALL );
+    }
+
+    /**
+     * @internal
+     */
+    private function getAssetToAdd( $args, $data ) {
+        $asset_class = $this->getAssetClass( $args[ 'what' ], $args[ 'class' ] );
+        $asset = new $asset_class( $args[ 'handle' ] );
+        if ( ! empty( $data ) ) {
+            $valid = array_filter( array_keys( $data ), function( $prop ) use($asset) {
+                return method_exists( $asset, 'set' . ucfirst( $prop ) );
+            } );
+            if ( empty( $valid ) ) {
+                return $asset;
+            }
+            foreach ( $valid as $key ) {
+                $method = 'set' . ucfirst( $key );
+                $asset->$method( $data[ $key ] );
+            }
+        }
+        return $asset;
     }
 
     /**
