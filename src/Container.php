@@ -36,6 +36,12 @@ class Container implements ContainerInterface {
         return $style;
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @return \SplObjectStorage
+     * @throws \InvalidArgumentException
+     */
     public function getScripts( $side = NULL ) {
         $scripts = $this->scripts;
         if ( is_null( $side ) ) {
@@ -47,6 +53,12 @@ class Container implements ContainerInterface {
         throw new \InvalidArgumentException;
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @return \SplObjectStorage
+     * @throws \InvalidArgumentException
+     */
     public function getStyles( $side = NULL ) {
         $styles = $this->styles;
         if ( is_null( $side ) ) {
@@ -62,6 +74,12 @@ class Container implements ContainerInterface {
         return $this->side;
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @return \SplObjectStorage
+     * @throws \RuntimeException
+     */
     public function getSideStyles() {
         $side = $this->getSide();
         if ( empty( $side ) ) {
@@ -75,6 +93,12 @@ class Container implements ContainerInterface {
         return $all_styles;
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @return \SplObjectStorage
+     * @throws \RuntimeException
+     */
     public function getSideScrypts() {
         $side = $this->getSide();
         if ( empty( $side ) ) {
