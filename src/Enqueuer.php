@@ -4,7 +4,12 @@ class Enqueuer implements EnqueuerInterface {
 
     private $provided = [ 'script' => [ ], 'styles' => [ ] ];
 
-    public function enqueueScripts( \Iterator $scripts ) {
+    public function enqueueScripts( \Closure $scripts_factory ) {
+        /** @var \Brain\Occipital\Filter $scripts */
+        $scripts = $scripts_factory->__invoke();
+        if ( ! $scripts instanceof FilterInterface ) {
+            return;
+        }
         $provided = [ ];
         /** @type \Brain\Occipital\ScriptInterface $script */
         foreach ( $scripts as $script ) {
@@ -20,7 +25,12 @@ class Enqueuer implements EnqueuerInterface {
         $this->provided[ 'scripts' ] = array_filter( array_unique( array_values( $provided ) ) );
     }
 
-    public function enqueueStyles( \Iterator $styles ) {
+    public function enqueueStyles( \Closure $styles_factory ) {
+        /** @var $scripts \Brain\Occipital\Filter */
+        $styles = $styles_factory->__invoke();
+        if ( ! $styles instanceof FilterInterface ) {
+            return;
+        }
         $provided = [ ];
         /** @type \Brain\Occipital\StyleInterface $style */
         foreach ( $styles as $style ) {

@@ -17,7 +17,10 @@ class BrainModule implements \Brain\Module {
             $brain[ 'lobe.admin_page' ] = $page;
         }, -1 );
         add_action( 'lobe_done', function() use($brain) {
-            $brain[ 'lobe.worker' ]->work();
+            $enqueuer = $brain[ 'lobe.enqueuer' ];
+            $enqueuer->enqueueStyles();
+            $enqueuer->enqueueScripts();
+            $enqueuer->registerProvided();
         }, PHP_INT_MAX );
     }
 
@@ -29,25 +32,22 @@ class BrainModule implements \Brain\Module {
         $brain[ 'lobe.enqueuer' ] = function() {
             return new Enqueuer;
         };
-        $brain[ 'lobe.scripts' ] = $brain->protect( function( $c ) {
+        $brain[ 'lobe.scripts' ] = $brain->protect( function() use($brain) {
             /** @var \Brain\Occipital\Container $container */
-            $container = $c[ 'lobe.container' ];
+            $container = $brain[ 'lobe.container' ];
             if ( $container->checkSide() ) {
                 $side = $container->getSide();
-                return new Filter( $container->getSideScripts(), $side, $c[ 'lobe.admin_page' ] );
+                return new Filter( $container->getSideScripts(), $side, $brain[ 'lobe.admin_page' ] );
             }
         } );
-        $brain[ 'lobe.styles' ] = $brain->protect( function( $c ) {
+        $brain[ 'lobe.styles' ] = $brain->protect( function() use($brain) {
             /** @var \Brain\Occipital\Container $container */
-            $container = $c[ 'lobe.container' ];
+            $container = $brain[ 'lobe.container' ];
             $side = $container->getSide();
             if ( $container->checkSide() ) {
-                return new Filter( $container->getSideStyles(), $side, $c[ 'lobe.admin_page' ] );
+                return new Filter( $container->getSideStyles(), $side, $brain[ 'lobe.admin_page' ] );
             }
         } );
-        $brain[ 'lobe.worker' ] = function($c) {
-            return new Worker( $c[ 'lobe.enqueuer' ], $c[ 'lobe.scripts' ], $c[ 'lobe.styles' ] );
-        };
         $brain[ 'lobe.api' ] = function($c) {
             return new API( $c[ 'lobe.container' ] );
         };
