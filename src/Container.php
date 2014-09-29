@@ -99,7 +99,7 @@ class Container implements ContainerInterface {
      * @return \SplObjectStorage
      * @throws \RuntimeException
      */
-    public function getSideScrypts() {
+    public function getSideScripts() {
         $side = $this->getSide();
         if ( empty( $side ) ) {
             throw new \RuntimeException( '', 'lobe-too-early-for-side-scripts' );
@@ -119,27 +119,27 @@ class Container implements ContainerInterface {
             do_action( "lobe_ready_{$this->side}", $this );
             $this->unsetStorage( [ self::ADMIN, self::FRONT ] );
             do_action( 'lobe_done' );
-        }, -1 );
+        }, '-' . PHP_INT_MAX );
     }
 
     private function initAdmin() {
-        add_action( 'admin_enqueue_styles', function($page) {
+        add_action( 'admin_enqueue_scripts', function($page) {
             $this->side = self::ADMIN;
             do_action( 'lobe_ready', $this->side, $this, $page );
             do_action( "lobe_ready_{$this->side}", $this, $page );
             $this->unsetStorage( [ self::LOGIN, self::FRONT ] );
             do_action( 'lobe_done' );
-        }, -1 );
+        }, '-' . PHP_INT_MAX );
     }
 
     private function initFront() {
-        add_action( 'wp_enqueue_styles', function() {
+        add_action( 'wp_enqueue_scripts', function() {
             $this->side = self::FRONT;
             do_action( 'lobe_ready', $this->side, $this );
             do_action( "lobe_ready_{$this->side}", $this );
             $this->unsetStorage( [ self::LOGIN, self::ADMIN ] );
             do_action( 'lobe_done' );
-        }, -1 );
+        }, '-' . PHP_INT_MAX );
     }
 
     private function setStorage( $side ) {

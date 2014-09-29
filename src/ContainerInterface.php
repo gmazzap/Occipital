@@ -54,5 +54,5 @@ interface ContainerInterface {
      *
      * * @return \Iterator
      */
-    public function getSideScrypts();
+    public function getSideScripts();
 }
