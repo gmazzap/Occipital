@@ -3,12 +3,10 @@
 class Filter extends \FilterIterator implements FilterInterface {
 
     private $side;
-    private $admin_page;
 
-    public function __construct( \SplObjectStorage $storage, $side, $page = NULL ) {
+    public function __construct( \SplObjectStorage $storage, $side ) {
         parent::__construct( $storage );
         $this->side = $side;
-        $this->admin_page = $page;
     }
 
     public function accept() {
@@ -29,12 +27,12 @@ class Filter extends \FilterIterator implements FilterInterface {
         $context = FALSE;
         $logged = FALSE;
         if ( $this->side === Container::ADMIN ) {
-            $context = $this->admin_page;
-            $logged = TRUE;
+            $context = function_exist( 'get_current_screen' ) ? get_current_screen() : FALSE;
+            $logged = wp_get_current_user();
         }
         if ( $this->side === Container::FRONT ) {
             $context = $GLOBALS[ 'wp_query' ];
-            $logged = is_user_logged_in();
+            $logged = is_user_logged_in() ? wp_get_current_user() : FALSE;
         }
         return [ $this->side, $context, $logged ];
     }
