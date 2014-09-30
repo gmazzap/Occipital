@@ -24,8 +24,8 @@ class API {
      * @throws \InvalidArgumentException
      */
     public function add( $what, $handle, Array $data = [ ], $where = NULL, $class = NULL ) {
-        if ( did_action( 'lobe_done' ) ) {
-            return new \WP_Error( 'lobe-too-late-for-assets' );
+        if ( did_action( 'brain_assets_done' ) ) {
+            return new \WP_Error( 'occipital-too-late-for-assets' );
         }
         try {
             $args = $this->checkArgs( $what, $handle, $where, $class );
@@ -39,7 +39,7 @@ class API {
             $cb = $asset instanceof ScriptInterface ? 'addScript' : 'addStyle';
             return $this->container->$cb( $asset, $args[ 'where' ] );
         } catch ( \Exception $e ) {
-            return \Brain\exception2WPError( $e, 'lobe' );
+            return \Brain\exception2WPError( $e, 'occipital' );
         }
     }
 

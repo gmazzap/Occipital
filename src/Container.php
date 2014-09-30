@@ -115,30 +115,30 @@ class Container implements ContainerInterface {
     private function initLogin() {
         add_action( 'login_enqueue_scripts', function() {
             $this->side = self::LOGIN;
-            do_action( 'lobe_ready', $this->side, $this );
-            do_action( "lobe_ready_{$this->side}", $this );
+            do_action( 'brain_assets_ready', $this->side, $this );
+            do_action( "brain_assets_ready_{$this->side}", $this );
             $this->unsetStorage( [ self::ADMIN, self::FRONT ] );
-            do_action( 'lobe_done' );
+            do_action( 'brain_assets_done' );
         }, '-' . PHP_INT_MAX );
     }
 
     private function initAdmin() {
         add_action( 'admin_enqueue_scripts', function($page) {
             $this->side = self::ADMIN;
-            do_action( 'lobe_ready', $this->side, $this, $page );
-            do_action( "lobe_ready_{$this->side}", $this, $page );
+            do_action( 'brain_assets_ready', $this->side, $this, $page );
+            do_action( "brain_assets_ready_{$this->side}", $this, $page );
             $this->unsetStorage( [ self::LOGIN, self::FRONT ] );
-            do_action( 'lobe_done' );
+            do_action( 'brain_assets_done' );
         }, '-' . PHP_INT_MAX );
     }
 
     private function initFront() {
         add_action( 'wp_enqueue_scripts', function() {
             $this->side = self::FRONT;
-            do_action( 'lobe_ready', $this->side, $this );
-            do_action( "lobe_ready_{$this->side}", $this );
+            do_action( 'brain_assets_ready', $this->side, $this );
+            do_action( "brain_assets_ready_{$this->side}", $this );
             $this->unsetStorage( [ self::LOGIN, self::ADMIN ] );
-            do_action( 'lobe_done' );
+            do_action( 'brain_assets_done' );
         }, '-' . PHP_INT_MAX );
     }
 
@@ -157,7 +157,7 @@ class Container implements ContainerInterface {
     }
 
     private function checkSide( $side = NULL ) {
-        if ( did_action( 'lobe_done' ) ) {
+        if ( did_action( 'brain_assets_done' ) ) {
             return FALSE;
         }
         $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
@@ -167,7 +167,7 @@ class Container implements ContainerInterface {
         if ( is_null( $side ) || ! in_array( $side, $sides, TRUE ) ) {
             return FALSE;
         }
-        if ( $side === self::ALL || ( $side === $this->getSide() || ! did_action( 'lobe_ready' ) ) ) {
+        if ( $side === self::ALL || ( $side === $this->getSide() || ! did_action( 'brain_assets_ready' ) ) ) {
             return $side;
         }
         return FALSE;
