@@ -19,9 +19,10 @@ class Filter extends \FilterIterator implements FilterInterface {
             return TRUE;
         }
         if ( ! is_callable( $condition ) ) {
-            throw new \UnexpectedValueException;
+            return FALSE;
         }
-        return call_user_func_array( $condition, $this->getConditionArgs() );
+        $result = call_user_func_array( $condition, $this->getConditionArgs() );
+        return ! empty( $result );
     }
 
     public function getConditionArgs() {
