@@ -83,7 +83,7 @@ class Container implements ContainerInterface {
     public function getSideStyles() {
         $side = $this->getSide();
         if ( empty( $side ) ) {
-            throw new \RuntimeException( '', 'lobe-too-early-for-side-scripts' );
+            throw new \RuntimeException;
         }
         /** @var \SplObjectStorage $side_styles */
         $side_styles = $this->getStyles( $this->getSide() );
@@ -102,7 +102,7 @@ class Container implements ContainerInterface {
     public function getSideScripts() {
         $side = $this->getSide();
         if ( empty( $side ) ) {
-            throw new \RuntimeException( '', 'lobe-too-early-for-side-scripts' );
+            throw new \RuntimeException;
         }
         /** @var \SplObjectStorage $side_scripts */
         $side_scripts = $this->getScripts( $this->getSide() );
