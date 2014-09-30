@@ -163,4 +163,60 @@ class ContainerTest extends TestCase {
         assertInstanceOf( 'SplObjectStorage', $cont->getStyles( Container::ALL ) );
     }
 
+    /**
+     * @expectedException RuntimeException
+     */
+    function testGetSideStylesFailsIfNotSide() {
+        $cont = new Container;
+        $cont->getSideStyles();
+    }
+
+    function testGetSideStyles() {
+        $cont = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
+        $cont->shouldReceive( 'getSide' )->andReturn( Container::ADMIN );
+        $side = new \SplObjectStorage;
+        $all = new \SplObjectStorage;
+        $a = (object) [ 'side' => 'admin' ];
+        $b = (object) [ 'side' => 'all' ];
+        $side->attach( $a );
+        $all->attach( $b );
+        $cont->shouldReceive( 'getStyles' )->with( Container::ADMIN )->andReturn( $side );
+        $cont->shouldReceive( 'getStyles' )->with( Container::ALL )->andReturn( $all );
+        $test = $cont->getSideStyles();
+        assertInstanceOf( 'SplObjectStorage', $test );
+        assertCount( 2, $test );
+        foreach ( $test as $object ) {
+            assertObjectHasAttribute( 'side', $object );
+            assertTrue( in_array( $object->side, [ 'admin', 'all' ], TRUE ) );
+        }
+    }
+
+    /**
+     * @expectedException RuntimeException
+     */
+    function testGetSideScriptsFailsIfNotSide() {
+        $cont = new Container;
+        $cont->getSideScripts();
+    }
+
+    function testGetSideScripts() {
+        $cont = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
+        $cont->shouldReceive( 'getSide' )->andReturn( Container::FRONT );
+        $side = new \SplObjectStorage;
+        $all = new \SplObjectStorage;
+        $a = (object) [ 'side' => 'front' ];
+        $b = (object) [ 'side' => 'all' ];
+        $side->attach( $a );
+        $all->attach( $b );
+        $cont->shouldReceive( 'getScripts' )->with( Container::FRONT )->andReturn( $side );
+        $cont->shouldReceive( 'getScripts' )->with( Container::ALL )->andReturn( $all );
+        $test = $cont->getSideScripts();
+        assertInstanceOf( 'SplObjectStorage', $test );
+        assertCount( 2, $test );
+        foreach ( $test as $object ) {
+            assertObjectHasAttribute( 'side', $object );
+            assertTrue( in_array( $object->side, [ 'front', 'all' ], TRUE ) );
+        }
+    }
+
 }
