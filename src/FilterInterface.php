@@ -9,5 +9,10 @@ interface FilterInterface extends \OuterIterator {
      */
     public function getConditionArgs();
 
+    /**
+     * Filter the script and styles iterator returning the ones which condition callback returs true
+     *
+     * @return boolean
+     */
     public function accept();
 }
