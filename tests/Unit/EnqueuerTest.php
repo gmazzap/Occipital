@@ -43,18 +43,30 @@ class EnqueuerTest extends TestCase {
     }
 
     function testEnqueueScripts() {
-        $cb = function() {
-            return new \ArrayIterator( [ $this->getScript( 'test' ) ] );
+        // See `helpers.php` to see how wp_enqueue_script() is mocked
+        global $wp_scripts;
+        $ids = [ 'a', 'b', 'c' ];
+        $queue = [ ];
+        $cb = function() use($ids, &$queue) {
+            $scripts = [ ];
+            foreach ( $ids as $id ) {
+                $s = $this->getScript( $id );
+                $queue[ $id ] = [ $id, $s->getSrc(), $s->getDeps(), $s->getVer(), $s->isFooter() ];
+                $scripts[] = $s;
+            }
+            return new \ArrayIterator( $scripts );
         };
-        \WP_Mock::wpFunction( 'wp_enqueue_script', [
-            'args' => [ 'test', 'http://www.example.com/js/test.js', [ 'foo', 'bar' ], 1, TRUE ],
-        ] );
         \WP_Mock::wpFunction( 'wp_localize_script', [
-            'args'  => [ 'test', 'data_test', [ 'id' => 'test' ] ],
-            'times' => 1
+            'args'  => [
+                \WP_Mock\Functions::anyOf( 'a', 'b', 'c' ),
+                \WP_Mock\Functions::anyOf( 'data_a', 'data_b', 'data_c' ),
+                \WP_Mock\Functions::type( 'array' )
+            ],
+            'times' => count( $ids )
         ] );
         $e = new Enqueuer;
         assertTrue( $e->enqueueScripts( $cb ) );
+        assertSame( $wp_scripts->queue, $queue );
     }
 
     function testEnqueueStylesNullIfNoScripts() {
@@ -66,14 +78,22 @@ class EnqueuerTest extends TestCase {
     }
 
     function testEnqueueStyles() {
-        $cb = function() {
-            return new \ArrayIterator( [ $this->getStyle( 'test' ) ] );
+        // See `helpers.php` to see how wp_enqueue_style() is mocked
+        global $wp_styles;
+        $ids = [ 'a', 'b', 'c' ];
+        $queue = [ ];
+        $cb = function() use($ids, &$queue) {
+            $styles = [ ];
+            foreach ( $ids as $id ) {
+                $s = $this->getStyle( $id );
+                $queue[ $id ] = [ $id, $s->getSrc(), $s->getDeps(), $s->getVer(), $s->getMedia() ];
+                $styles[] = $s;
+            }
+            return new \ArrayIterator( $styles );
         };
-        \WP_Mock::wpFunction( 'wp_enqueue_style', [
-            'args' => [ 'test', 'http://www.example.com/css/test.css', [ 'foo', 'bar' ], 1, 'all' ],
-        ] );
         $e = new Enqueuer;
         assertTrue( $e->enqueueStyles( $cb ) );
+        assertSame( $wp_styles->queue, $queue );
     }
 
     function testRegisterProvidedNullIfNotDoingHead() {
