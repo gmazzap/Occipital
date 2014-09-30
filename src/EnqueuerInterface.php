@@ -17,7 +17,14 @@ interface EnqueuerInterface {
     public function enqueueStyles( \Closure $styles_factory );
 
     /**
-     * Set asdone the styles and the scripts provided by registered scripts and styles.
+     * Set as done the styles and the scripts provided by registered scripts and styles.
      */
     public function registerProvided();
+
+    /**
+     * Set provided script and styles or only one of them
+     *
+     * @param string|void $which `'styles'` or `'script'`
+     */
+    public function getProvided( $which = NULL );
 }
