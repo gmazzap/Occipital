@@ -51,7 +51,9 @@ class EnqueuerTest extends TestCase {
             $scripts = [ ];
             foreach ( $ids as $id ) {
                 $s = $this->getScript( $id );
-                $queue[ $id ] = [ $id, $s->getSrc(), $s->getDeps(), $s->getVer(), $s->isFooter() ];
+                $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
+                $args = array_combine( $keys, [ $id, $s->getSrc(), $s->getDeps(), $s->getVer(), $s->isFooter() ] );
+                $queue[ $id ] = $args;
                 $scripts[] = $s;
             }
             return new \ArrayIterator( $scripts );
@@ -86,7 +88,9 @@ class EnqueuerTest extends TestCase {
             $styles = [ ];
             foreach ( $ids as $id ) {
                 $s = $this->getStyle( $id );
-                $queue[ $id ] = [ $id, $s->getSrc(), $s->getDeps(), $s->getVer(), $s->getMedia() ];
+                $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
+                $args = array_combine( $keys, [ $id, $s->getSrc(), $s->getDeps(), $s->getVer(), $s->getMedia() ] );
+                $queue[ $id ] = $args;
                 $styles[] = $s;
             }
             return new \ArrayIterator( $styles );
@@ -119,10 +123,10 @@ class EnqueuerTest extends TestCase {
         $wp_styles->to_do = [ 'a' ];
         $wp_scripts->to_do = [ 'd', 'z' ];
         assertTrue( $e->registerProvided() );
-        assertSame( $wp_styles->to_do, [ ] );
-        assertSame( $wp_styles->done, [ 'a', 'b', 'c' ] );
-        assertSame( $wp_scripts->to_do, [ 'z' ] );
-        assertSame( $wp_scripts->done, [ 'd', 'e' ] );
+        assertSame( [ ], $wp_styles->to_do );
+        assertSame( [ 'a', 'b', 'c' ], $wp_styles->done );
+        assertSame( [ 'z' ], $wp_scripts->to_do );
+        assertSame( [ 'd', 'e' ], $wp_scripts->done );
     }
 
 }
