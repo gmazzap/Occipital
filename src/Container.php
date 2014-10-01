@@ -53,9 +53,9 @@ class Container implements ContainerInterface {
             return;
         }
         if ( $scripts->offsetExists( $handle ) ) {
-            $scripts->offsetUnset( $script->getHandle() );
+            $scripts->offsetUnset( $handle );
         }
-        if ( wp_style_is( $handle, 'queue' ) ) {
+        if ( wp_script_is( $handle, 'queue' ) ) {
             wp_dequeue_script( $handle );
         }
     }
@@ -73,10 +73,10 @@ class Container implements ContainerInterface {
             return;
         }
         if ( $styles->offsetExists( $handle ) ) {
-            $styles->offsetUnset( $style->getHandle() );
+            $styles->offsetUnset( $handle );
         }
         if ( wp_style_is( $handle, 'queue' ) ) {
-            wp_dequeue_script( $handle );
+            wp_dequeue_style( $handle );
         }
     }
 
