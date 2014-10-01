@@ -10,7 +10,7 @@ class EnqueuerTest extends TestCase {
         }
         $style = \Mockery::mock( 'Brain\Occipital\StyleInterface' );
         $style->shouldReceive( 'getHandle' )->andReturn( $id );
-        $style->shouldReceive( 'getSrc' )->andReturn( "http://www.example.com/js/{$id}.js" );
+        $style->shouldReceive( 'getSrc' )->andReturn( "http://www.example.com/css/{$id}.css" );
         $style->shouldReceive( 'getDeps' )->andReturn( [ 'foo', 'bar' ] );
         $style->shouldReceive( 'getVer' )->andReturn( 1 );
         $style->shouldReceive( 'getMedia' )->andReturn( 'all' );
@@ -34,8 +34,213 @@ class EnqueuerTest extends TestCase {
         return $script;
     }
 
-    function testTest() {
-        assertTrue( TRUE );
+    function testSetupStyles() {
+        \WP_Mock::wpFunction( 'doing_action', [
+            'args'   => [ 'wp_head' ],
+            'times'  => 1,
+            'return' => TRUE
+        ] );
+        $e = new Enqueuer;
+        $cl_styles = function() {
+            return new \ArrayIterator( [
+                'foo' => $this->getStyle( 'foo' ),
+                'bar' => $this->getStyle( 'bar' ),
+                'baz' => $this->getStyle( 'baz' )
+                ] );
+        };
+        $cl_scripts = function() {
+            return;
+        };
+        $style_args = function( $id) {
+            return [ $id, "http://www.example.com/css/{$id}.css", [ 'foo', 'bar' ], 1, 'all' ];
+        };
+        $styles = [ $style_args( 'foo' ), $style_args( 'bar' ), $style_args( 'baz' ) ];
+        $provided_styles = [ 'white', "prov_by_foo", "prov_by_bar", "prov_by_baz" ];
+        assertTrue( $e->setup( $cl_styles, $cl_scripts ) );
+        assertSame( $styles, $e->getStyles() );
+        assertSame( $provided_styles, $e->getProvidedStyles() );
+    }
+
+    function testSetupScripts() {
+        \WP_Mock::wpFunction( 'doing_action', [
+            'args'   => [ 'wp_head' ],
+            'times'  => 1,
+            'return' => TRUE
+        ] );
+        $e = new Enqueuer;
+        $cl_styles = function() {
+            return;
+        };
+        $cl_scripts = function() {
+            return new \ArrayIterator( [
+                'foo' => $this->getScript( 'foo' ),
+                'bar' => $this->getScript( 'bar' ),
+                'baz' => $this->getScript( 'baz' )
+                ] );
+        };
+        $script_args = function( $id) {
+            return [ $id, "http://www.example.com/js/{$id}.js", [ 'foo', 'bar' ], 1, TRUE ];
+        };
+        $scripts = [ $script_args( 'foo' ), $script_args( 'bar' ), $script_args( 'baz' ) ];
+        $provided_scripts = [ 'grey', "prov_by_foo", "prov_by_bar", "prov_by_baz" ];
+        $data = [
+            'foo' => [ 'foo', 'data_foo', [ 'id' => 'foo' ] ],
+            'bar' => [ 'bar', 'data_bar', [ 'id' => 'bar' ] ],
+            'baz' => [ 'baz', 'data_baz', [ 'id' => 'baz' ] ]
+        ];
+        assertTrue( $e->setup( $cl_styles, $cl_scripts ) );
+        assertSame( $scripts, $e->getScripts() );
+        assertSame( $provided_scripts, $e->getProvidedScripts() );
+        assertSame( $data, $e->getScriptsData() );
+    }
+
+    function testSetupEnsureStylesDeps() {
+        \WP_Mock::wpFunction( 'doing_action', [
+            'args'   => [ 'wp_head' ],
+            'times'  => 1,
+            'return' => TRUE
+        ] );
+        $cl = function() {
+            return;
+        };
+        global $wp_styles, $wp_scripts;
+        $wp_styles->registered = [
+            'x'   => (object) [ 'deps' => [ ] ],
+            'z'   => (object) [ 'deps' => [ ] ],
+            'i'   => (object) [ 'deps' => [ ] ],
+            'y'   => (object) [ 'deps' => [ 'x' ] ],
+            'foo' => (object) [ 'deps' => [ 'y', 'z' ] ],
+            'bar' => (object) [ 'deps' => [ 'i' ] ]
+        ];
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ 'z', 'foo', 'bar' ] );
+        $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ ] );
+        assertTrue( $e->setup( $cl, $cl ) );
+        assertSame( [ 'y', 'i' ], array_keys( $wp_styles->queue ) );
+        assertSame( [ ], $wp_scripts->queue );
+    }
+
+    function testSetupEnsureScriptsDeps() {
+        \WP_Mock::wpFunction( 'doing_action', [
+            'args'   => [ 'wp_head' ],
+            'times'  => 1,
+            'return' => TRUE
+        ] );
+        $cl = function() {
+            return;
+        };
+        global $wp_styles, $wp_scripts;
+        $wp_scripts->registered = [
+            'x'   => (object) [ 'deps' => [ ] ],
+            'z'   => (object) [ 'deps' => [ ] ],
+            'i'   => (object) [ 'deps' => [ ] ],
+            'y'   => (object) [ 'deps' => [ 'x' ] ],
+            'foo' => (object) [ 'deps' => [ 'y', 'z' ] ],
+            'bar' => (object) [ 'deps' => [ 'i' ] ]
+        ];
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ 'z', 'foo', 'bar' ] );
+        assertTrue( $e->setup( $cl, $cl ) );
+        assertSame( [ 'y', 'i' ], array_keys( $wp_scripts->queue ) );
+        assertSame( [ ], $wp_styles->queue );
+    }
+
+    function testEnqueueDoNothingIfNothingtoDo() {
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->shouldReceive( 'getStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getScripts' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ ] );
+        assertSame( array_fill( 0, 4, FALSE ), array_values( $e->enqueue() ) );
+    }
+
+    function testEnqueueStyles() {
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
+        $style_args = function( $id ) {
+            return [ $id, "http://www.example.com/css/{$id}.css", [ 'foo', 'bar' ], 1, 'all' ];
+        };
+        $styles = [ $style_args( 'foo' ), $style_args( 'bar' ), $style_args( 'baz' ) ];
+        $e->shouldReceive( 'getStyles' )->andReturn( $styles );
+        $e->shouldReceive( 'getScripts' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ ] );
+        global $wp_styles;
+        $queue = [
+            'foo' => array_combine( $keys, $style_args( 'foo' ) ),
+            'bar' => array_combine( $keys, $style_args( 'bar' ) ),
+            'baz' => array_combine( $keys, $style_args( 'baz' ) )
+        ];
+        $done = $e->enqueue();
+        assertTrue( $done[ 'styles_enqueue' ] );
+        assertSame( $queue, $wp_styles->registered );
+        assertSame( $queue, $wp_styles->queue );
+    }
+
+    function testEnqueueScripts() {
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
+        $script_args = function( $id ) {
+            return [ $id, "http://www.example.com/js/{$id}.js", [ 'foo', 'bar' ], 1, TRUE ];
+        };
+        $scripts = [ $script_args( 'foo' ), $script_args( 'bar' ), $script_args( 'baz' ) ];
+        $data = [
+            'foo' => [ 'test', 'Test', [ 'test' ] ],
+            'bar' => [ 'test', 'Test', [ 'test' ] ],
+            'baz' => [ 'test', 'Test', [ 'test' ] ]
+        ];
+        $e->shouldReceive( 'getStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getScripts' )->andReturn( $scripts );
+        $e->shouldReceive( 'getScriptsData' )->andReturn( $data );
+        $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ ] );
+        global $wp_scripts;
+        $queue = [
+            'foo' => array_combine( $keys, $script_args( 'foo' ) ),
+            'bar' => array_combine( $keys, $script_args( 'bar' ) ),
+            'baz' => array_combine( $keys, $script_args( 'baz' ) )
+        ];
+        \WP_Mock::wpFunction( 'wp_localize_script', [
+            'args'  => [ 'test', 'Test', [ 'test' ] ],
+            'times' => 3
+        ] );
+        $done = $e->enqueue();
+        assertTrue( $done[ 'scripts_enqueue' ] );
+        assertSame( $queue, $wp_scripts->registered );
+        assertSame( $queue, $wp_scripts->queue );
+    }
+
+    function testEnqueueProvidedStyles() {
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $provided_styles = [ 'grey', 'old', 'red' ];
+        $e->shouldReceive( 'getStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getScripts' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedStyles' )->andReturn( $provided_styles );
+        $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ ] );
+        global $wp_styles;
+        $wp_styles->to_do = [ 'white', 'grey', 'blue' ];
+        $wp_styles->done = [ 'old' ];
+        $done = $e->enqueue();
+        assertTrue( $done[ 'styles_provide' ] );
+        assertSame( [ 'white', 'blue' ], $wp_styles->to_do );
+        assertSame( [ 'old', 'grey', 'red' ], $wp_styles->done );
+    }
+
+    function testEnqueueProvidedScripts() {
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $provided_scripts = [ 'grey', 'old', 'red' ];
+        $e->shouldReceive( 'getStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getScripts' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ ] );
+        $e->shouldReceive( 'getProvidedScripts' )->andReturn( $provided_scripts );
+        global $wp_scripts;
+        $wp_scripts->to_do = [ 'white', 'grey', 'blue' ];
+        $wp_scripts->done = [ 'old' ];
+        $done = $e->enqueue();
+        assertTrue( $done[ 'scripts_provide' ] );
+        assertSame( [ 'white', 'blue' ], $wp_scripts->to_do );
+        assertSame( [ 'old', 'grey', 'red' ], $wp_scripts->done );
     }
 
 }
