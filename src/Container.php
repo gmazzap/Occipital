@@ -5,8 +5,8 @@ class Container implements ContainerInterface {
     private static $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
     private $scripts = [ ];
     private $styles = [ ];
-    private $all_scripts = [ ];
-    private $all_styles = [ ];
+    private $all_scripts;
+    private $all_styles;
     private $side;
 
     public function __construct() {
