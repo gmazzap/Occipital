@@ -66,13 +66,14 @@ class ContainerTest extends TestCase {
             'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
-        $scripts = new \SplObjectStorage;
+        $scripts = new \ArrayIterator;
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
+        $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
         $c->shouldReceive( 'getSide' )->withNoArgs()->andReturnNull();
         $c->shouldReceive( 'getScripts' )->with( Container::ALL )->once()->andReturn( $scripts );
         assertSame( $script, $c->addScript( $script ) );
-        assertTrue( $scripts->contains( $script ) );
+        assertTrue( $scripts->offsetExists( 'foo' ) );
     }
 
     function testAddGivenSideOnSameSide() {
@@ -81,12 +82,13 @@ class ContainerTest extends TestCase {
             'return' => FALSE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
-        $scripts = new \SplObjectStorage;
+        $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
+        $scripts = new \ArrayIterator;
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
         $c->shouldReceive( 'getSide' )->withNoArgs()->andReturn( Container::FRONT );
         $c->shouldReceive( 'getScripts' )->with( Container::FRONT )->andReturn( $scripts );
         assertSame( $script, $c->addScript( $script, Container::FRONT ) );
-        assertTrue( $scripts->contains( $script ) );
+        assertTrue( $scripts->offsetExists( 'foo' ) );
     }
 
     function testAddGivenSideEarly() {
@@ -99,12 +101,13 @@ class ContainerTest extends TestCase {
             'return' => FALSE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
-        $scripts = new \SplObjectStorage;
+        $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
+        $scripts = new \ArrayIterator;
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
         $c->shouldReceive( 'getSide' )->withNoArgs()->andReturnNull();
         $c->shouldReceive( 'getScripts' )->with( Container::FRONT )->andReturn( $scripts );
         assertSame( $script, $c->addScript( $script, Container::FRONT ) );
-        assertTrue( $scripts->contains( $script ) );
+        assertTrue( $scripts->offsetExists( 'foo' ) );
     }
 
     function testAddNotGivenSide() {
@@ -113,12 +116,13 @@ class ContainerTest extends TestCase {
             'return' => FALSE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
-        $scripts = new \SplObjectStorage;
+        $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
+        $scripts = new \ArrayIterator;
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
         $c->shouldReceive( 'getSide' )->withNoArgs()->andReturn( Container::FRONT );
         $c->shouldReceive( 'getScripts' )->with( Container::FRONT )->andReturn( $scripts );
         assertSame( $script, $c->addScript( $script ) );
-        assertTrue( $scripts->contains( $script ) );
+        assertTrue( $scripts->offsetExists( 'foo' ) );
     }
 
     /**
@@ -142,12 +146,12 @@ class ContainerTest extends TestCase {
         $scripts = $cont->getScripts();
         assertInternalType( 'array', $scripts );
         assertArrayHasKey( Container::ALL, $scripts );
-        assertInstanceOf( 'SplObjectStorage', array_shift( $scripts ) );
+        assertInstanceOf( 'ArrayIterator', array_shift( $scripts ) );
     }
 
     function testGetScripts() {
         $cont = new Container;
-        assertInstanceOf( 'SplObjectStorage', $cont->getScripts( Container::ALL ) );
+        assertInstanceOf( 'ArrayIterator', $cont->getScripts( Container::ALL ) );
     }
 
     function testGetStylesArray() {
@@ -155,12 +159,12 @@ class ContainerTest extends TestCase {
         $styles = $cont->getStyles();
         assertInternalType( 'array', $styles );
         assertArrayHasKey( Container::ALL, $styles );
-        assertInstanceOf( 'SplObjectStorage', array_shift( $styles ) );
+        assertInstanceOf( 'ArrayIterator', array_shift( $styles ) );
     }
 
     function testGetStyles() {
         $cont = new Container;
-        assertInstanceOf( 'SplObjectStorage', $cont->getStyles( Container::ALL ) );
+        assertInstanceOf( 'ArrayIterator', $cont->getStyles( Container::ALL ) );
     }
 
     /**
@@ -171,52 +175,12 @@ class ContainerTest extends TestCase {
         $cont->getSideStyles();
     }
 
-    function testGetSideStyles() {
-        $cont = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
-        $cont->shouldReceive( 'getSide' )->andReturn( Container::ADMIN );
-        $side = new \SplObjectStorage;
-        $all = new \SplObjectStorage;
-        $a = (object) [ 'side' => 'admin' ];
-        $b = (object) [ 'side' => 'all' ];
-        $side->attach( $a );
-        $all->attach( $b );
-        $cont->shouldReceive( 'getStyles' )->with( Container::ADMIN )->andReturn( $side );
-        $cont->shouldReceive( 'getStyles' )->with( Container::ALL )->andReturn( $all );
-        $test = $cont->getSideStyles();
-        assertInstanceOf( 'SplObjectStorage', $test );
-        assertCount( 2, $test );
-        foreach ( $test as $object ) {
-            assertObjectHasAttribute( 'side', $object );
-            assertTrue( in_array( $object->side, [ 'admin', 'all' ], TRUE ) );
-        }
-    }
-
     /**
      * @expectedException RuntimeException
      */
     function testGetSideScriptsFailsIfNotSide() {
         $cont = new Container;
         $cont->getSideScripts();
-    }
-
-    function testGetSideScripts() {
-        $cont = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
-        $cont->shouldReceive( 'getSide' )->andReturn( Container::FRONT );
-        $side = new \SplObjectStorage;
-        $all = new \SplObjectStorage;
-        $a = (object) [ 'side' => 'front' ];
-        $b = (object) [ 'side' => 'all' ];
-        $side->attach( $a );
-        $all->attach( $b );
-        $cont->shouldReceive( 'getScripts' )->with( Container::FRONT )->andReturn( $side );
-        $cont->shouldReceive( 'getScripts' )->with( Container::ALL )->andReturn( $all );
-        $test = $cont->getSideScripts();
-        assertInstanceOf( 'SplObjectStorage', $test );
-        assertCount( 2, $test );
-        foreach ( $test as $object ) {
-            assertObjectHasAttribute( 'side', $object );
-            assertTrue( in_array( $object->side, [ 'front', 'all' ], TRUE ) );
-        }
     }
 
 }
