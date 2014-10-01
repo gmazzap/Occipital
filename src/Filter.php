@@ -4,7 +4,7 @@ class Filter extends \FilterIterator implements FilterInterface {
 
     private $side;
 
-    public function __construct( \SplObjectStorage $storage, $side ) {
+    public function __construct( \Iterator $storage, $side ) {
         parent::__construct( $storage );
         $this->side = $side;
     }
