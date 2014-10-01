@@ -3,28 +3,50 @@
 interface EnqueuerInterface {
 
     /**
-     * Enqueue the given script objects, extracting properties and calling `wp_enqueue_script`.
+     * Get assets to enqueue using giving closure factories
      *
-     * @param \SplObjectStorage $scripts_factory
+     * @param \Closure $styles_factory  Factory for styles, have to return an iterator
+     * @param \Closure $scripts_factory Factory for scripts, have to return an iterator
      */
-    public function enqueueScripts( \Closure $scripts_factory );
+    public function setup( \Closure $styles_factory, \Closure $scripts_factory );
 
     /**
-     * Enqueue the given script objects, extracting properties and calling `wp_enqueue_style`.
-     *
-     * @param \SplObjectStorage $styles_factory
+     * Enqueue scripts and styles.
      */
-    public function enqueueStyles( \Closure $styles_factory );
+    public function enqueue();
 
     /**
-     * Set as done the styles and the scripts provided by registered scripts and styles.
+     * Get enqueued styles
+     *
+     * @return array
      */
-    public function registerProvided();
+    public function getStyles();
 
     /**
-     * Set provided script and styles or only one of them
+     * Get enqueued styles
      *
-     * @param string|void $which `'styles'` or `'script'`
+     * @return array
      */
-    public function getProvided( $which = NULL );
+    public function getScripts();
+
+    /**
+     * Get provided styles
+     *
+     * @return array
+     */
+    public function getProvidedStyles();
+
+    /**
+     * Get provided scripts
+     *
+     * @return array
+     */
+    public function getProvidedScripts();
+
+    /**
+     * Get scripts localization data
+     *
+     * @return array
+     */
+    public function getScriptsData();
 }

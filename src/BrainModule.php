@@ -15,9 +15,8 @@ class BrainModule implements \Brain\Module {
         $brain[ 'occipital.container' ]->init();
         add_action( 'brain_assets_done', function() use($brain) {
             $enqueuer = $brain[ 'occipital.enqueuer' ];
-            $enqueuer->enqueueStyles( $brain[ 'occipital.styles' ] );
-            $enqueuer->enqueueScripts( $brain[ 'occipital.scripts' ] );
-            $enqueuer->registerProvided();
+            $enqueuer->setup( $brain[ 'occipital.styles' ], $brain[ 'occipital.scripts' ] );
+            $enqueuer->enqueue();
         }, PHP_INT_MAX );
     }
 

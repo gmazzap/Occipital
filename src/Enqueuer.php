@@ -2,75 +2,137 @@
 
 class Enqueuer implements EnqueuerInterface {
 
-    private $provided = [ 'scripts' => [ ], 'styles' => [ ] ];
+    use \Brain\Contextable;
 
-    public function enqueueScripts( \Closure $scripts_factory ) {
-        /** @var \Brain\Occipital\FilterInterface $scripts */
-        $scripts = $scripts_factory->__invoke();
-        if ( ! $scripts instanceof \Iterator ) {
-            return;
-        }
-        $provided = [ ];
-        /** @type \Brain\Occipital\ScriptInterface $script */
-        foreach ( $scripts as $script ) {
-            $args = $this->getAssetArgs( $script );
-            $provided = array_merge( $provided, $script->getProvided() );
-            call_user_func_array( 'wp_enqueue_script', $args );
-            $data = $script->getLocalizeData();
-            if ( is_object( $data ) && isset( $data->name ) ) {
-                $js_object = isset( $data->data ) ? (array) $data->data : [ ];
-                wp_localize_script( $args[ 0 ], $data->name, $js_object );
-            }
-        }
-        $this->provided[ 'scripts' ] = array_filter( array_unique( array_values( $provided ) ) );
-        return TRUE;
+    private $context;
+
+    public function __construct() {
+        $this->context = new \ArrayObject;
     }
 
-    public function enqueueStyles( \Closure $styles_factory ) {
-        /** @var $scripts \Brain\Occipital\FilterInterface */
-        $styles = $styles_factory->__invoke();
-        if ( ! $styles instanceof \Iterator ) {
-            return;
-        }
-        $provided = [ ];
-        /** @type \Brain\Occipital\StyleInterface $style */
-        foreach ( $styles as $style ) {
-            $provided = array_merge( $provided, $style->getProvided() );
-            call_user_func_array( 'wp_enqueue_style', $this->getAssetArgs( $style ) );
-        }
-        $this->provided[ 'styles' ] = array_filter( array_unique( array_values( $provided ) ) );
-        return TRUE;
-    }
-
-    public function registerProvided() {
+    public function setup( \Closure $styles_factory, \Closure $scripts_factory ) {
         if ( ! doing_action( 'wp_head' ) ) {
             return;
         }
-        global $wp_scripts, $wp_styles;
-        $done_styles = $this->getProvided( 'styles' );
+        $this->setupStyles( $styles_factory );
+        $this->setupScripts( $scripts_factory );
+        $this->ensureStylesDeps();
+        $this->ensureScriptsDeps();
+    }
+
+    public function enqueue() {
+        $this->enqueueStyles();
+        $this->enqueueScripts();
+        $this->registerProvidedStyles();
+        $this->registerProvidedScripts();
+    }
+
+    public function getStyles() {
+        return $this->getContext( 'context', 'styles' ) ? : [ ];
+    }
+
+    public function getScripts() {
+        return $this->getContext( 'context', 'scripts' ) ? : [ ];
+    }
+
+    public function getProvidedStyles() {
+        return $this->getContext( 'context', 'provided_styles' ) ? : [ ];
+    }
+
+    public function getProvidedScripts() {
+        return $this->getContext( 'context', 'provided_scripts' ) ? : [ ];
+    }
+
+    public function getScriptsData() {
+        return $this->getContext( 'context', 'scripts_data' ) ? : [ ];
+    }
+
+    private function enqueueScripts() {
+        $scripts = $this->getScripts();
+        if ( empty( $scripts ) ) {
+            return;
+        }
+        array_walk( $scripts, function( $args ) {
+            call_user_func_array( 'wp_enqueue_script', $args );
+            $data = $this->getScriptsData();
+            if ( isset( $data[ $args[ 0 ] ] ) ) {
+                call_user_func_array( 'wp_localize_script', $data[ $args[ 0 ] ] );
+            }
+        } );
+        return TRUE;
+    }
+
+    private function enqueueStyles() {
+        $styles = $this->getStyles();
+        if ( empty( $styles ) ) {
+            return;
+        }
+        array_walk( $styles, function( $args ) {
+            call_user_func_array( 'wp_enqueue_style', $args );
+        } );
+        return TRUE;
+    }
+
+    private function registerProvidedStyles() {
+        global $wp_styles;
+        $done_styles = $this->getProvidedStyles();
         if ( $wp_styles instanceof \WP_Styles && ! empty( $done_styles ) ) {
-            $this->ensureStylesDeps( $done_styles );
             $wp_styles->to_do = array_values( array_diff( $wp_styles->to_do, $done_styles ) );
             $wp_styles->done = $done_styles;
         }
-        $done_scripts = $this->getProvided( 'scripts' );
+    }
+
+    private function registerProvidedScripts() {
+        global $wp_scripts;
+        $done_scripts = $this->getProvidedScripts();
         if ( $wp_scripts instanceof \WP_Scripts && ! empty( $done_scripts ) ) {
-            $this->ensureScriptsDeps( $done_scripts );
             $wp_scripts->to_do = array_values( array_diff( $wp_scripts->to_do, $done_scripts ) );
             $wp_scripts->done = $done_scripts;
         }
         return TRUE;
     }
 
-    public function getProvided( $which = NULL ) {
-        $provided = $this->provided;
-        if ( is_null( $which ) ) {
-            return $provided;
+    private function setupStyles( \Closure $styles_factory ) {
+        /** @var $styles_iterator \Brain\Occipital\FilterInterface */
+        $styles_iterator = $styles_factory->__invoke();
+        if ( ! $styles_iterator instanceof \Iterator ) {
+            return;
         }
-        if ( ! in_array( strtolower( $which ), [ 'scripts', 'styles' ], TRUE ) ) {
-            throw new \InvalidArgumentException;
+        /** @var $style \Brain\Occipital\StyleInterface */
+        foreach ( $styles_iterator as $style ) {
+            $styles = $this->getContext( 'context', 'styles' ) ? : [ ];
+            $styles[] = $this->getAssetArgs( $style );
+            $provided = array_merge(
+                (array) $this->getContext( 'context', 'provided_styles' ), $style->getProvided()
+            );
+            $this->setContext( 'context', 'styles', $styles );
+            $this->setContext( 'context', 'provided_styles', $provided );
+        };
+    }
+
+    private function setupScripts( \Closure $scripts_factory ) {
+        /** @var \Brain\Occipital\FilterInterface $scripts_iterator */
+        $scripts_iterator = $scripts_factory->__invoke();
+        if ( ! $scripts_iterator instanceof \Iterator ) {
+            return;
         }
-        return strtolower( $which ) === 'scripts' ? $provided[ 'scripts' ] : $provided[ 'styles' ];
+        /** @var $script \Brain\Occipital\ScryptInterface */
+        foreach ( $scripts_iterator as $script ) {
+            $scripts = $this->getContext( 'context', 'scripts' ) ? : [ ];
+            $scripts[] = $this->getAssetArgs( $script );
+            $provided = array_merge(
+                (array) $this->getContext( 'context', 'provided_scripts' ), $script->getProvided()
+            );
+            $this->setContext( 'context', 'scripts', $scripts );
+            $this->setContext( 'context', 'provided_scripts', $provided );
+            $i8n = $script->getLocalizeData();
+            if ( is_object( $i8n ) && isset( $i8n->name ) ) {
+                $js_object = isset( $i8n->data ) ? (array) $i8n->data : [ ];
+                $data = $this->getContext( 'context', 'scripts_data' ) ? : [ ];
+                $data[ $script->getHandle() ] = [ $script->getHandle(), $i8n->name, $js_object ];
+                $this->setContext( 'context', 'scripts_data', $data );
+            }
+        };
     }
 
     private function getAssetArgs( EnqueuableInterface $asset ) {
@@ -79,8 +141,9 @@ class Enqueuer implements EnqueuerInterface {
         return $args;
     }
 
-    private function ensureStylesDeps( Array $provided ) {
+    private function ensureStylesDeps() {
         $deps = [ ];
+        $provided = $this->getProvidedStyles();
         array_walk( $provided, function( $id ) use(&$deps) {
             if ( wp_style_is( $id, 'registered' ) ) {
                 $deps = array_merge( $deps, $GLOBALS[ 'wp_styles' ]->registered[ $id ]->deps );
@@ -94,8 +157,9 @@ class Enqueuer implements EnqueuerInterface {
         } );
     }
 
-    private function ensureScriptsDeps( Array $provided ) {
+    private function ensureScriptsDeps() {
         $deps = [ ];
+        $provided = $this->getProvidedScripts();
         array_walk( $provided, function( $id ) use(&$deps) {
             if ( wp_script_is( $id, 'registered' ) ) {
                 $deps = array_merge( $deps, $GLOBALS[ 'wp_script' ]->registered[ $id ]->deps );
