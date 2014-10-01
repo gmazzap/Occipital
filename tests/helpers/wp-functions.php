@@ -33,7 +33,7 @@ if ( ! function_exists( 'wp_script_is' ) ) {
 
     function wp_script_is( $handle, $what = 'queue' ) {
         global $wp_scripts;
-        if ( ! $wp_scripts instanceof WP_Styles ) {
+        if ( ! $wp_scripts instanceof WP_Scripts ) {
             return FALSE;
         }
         if ( $what === 'enqueue' ) {
