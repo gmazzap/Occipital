@@ -18,13 +18,16 @@ class Enqueuer implements EnqueuerInterface {
         $this->setupScripts( $scripts_factory );
         $this->ensureStylesDeps();
         $this->ensureScriptsDeps();
+        return TRUE;
     }
 
     public function enqueue() {
-        $this->enqueueStyles();
-        $this->enqueueScripts();
-        $this->registerProvidedStyles();
-        $this->registerProvidedScripts();
+        $done = [ ];
+        $done[ 'styles_enqueue' ] = $this->enqueueStyles();
+        $done[ 'scripts_enqueue' ] = $this->enqueueScripts();
+        $done[ 'styles_provide' ] = $this->setProvidedStyles();
+        $done[ 'scripts_provide' ] = $this->setProvidedScripts();
+        return $done;
     }
 
     public function getStyles() {
@@ -36,60 +39,17 @@ class Enqueuer implements EnqueuerInterface {
     }
 
     public function getProvidedStyles() {
-        return $this->getContext( 'context', 'provided_styles' ) ? : [ ];
+        $provided = $this->getContext( 'context', 'provided_styles' ) ? : [ ];
+        return array_values( array_unique( $provided ) );
     }
 
     public function getProvidedScripts() {
-        return $this->getContext( 'context', 'provided_scripts' ) ? : [ ];
+        $provided = $this->getContext( 'context', 'provided_scripts' ) ? : [ ];
+        return array_values( array_unique( $provided ) );
     }
 
     public function getScriptsData() {
         return $this->getContext( 'context', 'scripts_data' ) ? : [ ];
-    }
-
-    private function enqueueScripts() {
-        $scripts = $this->getScripts();
-        if ( empty( $scripts ) ) {
-            return;
-        }
-        array_walk( $scripts, function( $args ) {
-            call_user_func_array( 'wp_enqueue_script', $args );
-            $data = $this->getScriptsData();
-            if ( isset( $data[ $args[ 0 ] ] ) ) {
-                call_user_func_array( 'wp_localize_script', $data[ $args[ 0 ] ] );
-            }
-        } );
-        return TRUE;
-    }
-
-    private function enqueueStyles() {
-        $styles = $this->getStyles();
-        if ( empty( $styles ) ) {
-            return;
-        }
-        array_walk( $styles, function( $args ) {
-            call_user_func_array( 'wp_enqueue_style', $args );
-        } );
-        return TRUE;
-    }
-
-    private function registerProvidedStyles() {
-        global $wp_styles;
-        $done_styles = $this->getProvidedStyles();
-        if ( $wp_styles instanceof \WP_Styles && ! empty( $done_styles ) ) {
-            $wp_styles->to_do = array_values( array_diff( $wp_styles->to_do, $done_styles ) );
-            $wp_styles->done = $done_styles;
-        }
-    }
-
-    private function registerProvidedScripts() {
-        global $wp_scripts;
-        $done_scripts = $this->getProvidedScripts();
-        if ( $wp_scripts instanceof \WP_Scripts && ! empty( $done_scripts ) ) {
-            $wp_scripts->to_do = array_values( array_diff( $wp_scripts->to_do, $done_scripts ) );
-            $wp_scripts->done = $done_scripts;
-        }
-        return TRUE;
     }
 
     private function setupStyles( \Closure $styles_factory ) {
@@ -135,10 +95,54 @@ class Enqueuer implements EnqueuerInterface {
         };
     }
 
-    private function getAssetArgs( EnqueuableInterface $asset ) {
-        $args = [ $asset->getHandle(), $asset->getSrc(), $asset->getDeps(), $asset->getVer() ];
-        $args[] = $asset instanceof ScriptInterface ? $asset->isFooter() : $asset->getMedia();
-        return $args;
+    private function enqueueScripts() {
+        $scripts = $this->getScripts();
+        if ( empty( $scripts ) ) {
+            return FALSE;
+        }
+        array_walk( $scripts, function( $args ) {
+            call_user_func_array( 'wp_enqueue_script', $args );
+            $data = $this->getScriptsData();
+            if ( isset( $data[ $args[ 0 ] ] ) ) {
+                call_user_func_array( 'wp_localize_script', $data[ $args[ 0 ] ] );
+            }
+        } );
+        return TRUE;
+    }
+
+    private function enqueueStyles() {
+        $styles = $this->getStyles();
+        if ( empty( $styles ) ) {
+            return FALSE;
+        }
+        array_walk( $styles, function( $args ) {
+            call_user_func_array( 'wp_enqueue_style', $args );
+        } );
+        return TRUE;
+    }
+
+    private function setProvidedStyles() {
+        global $wp_styles;
+        $done = $this->getProvidedStyles();
+        $registered = FALSE;
+        if ( $wp_styles instanceof \WP_Styles && ! empty( $done ) ) {
+            $wp_styles->to_do = $this->uniqueFilteredArrays( $wp_styles->to_do, $done, TRUE );
+            $wp_styles->done = $this->uniqueFilteredArrays( $wp_styles->done, $done, FALSE );
+            $registered = TRUE;
+        }
+        return $registered;
+    }
+
+    private function setProvidedScripts() {
+        global $wp_scripts;
+        $done = $this->getProvidedScripts();
+        $registered = FALSE;
+        if ( $wp_scripts instanceof \WP_Scripts && ! empty( $done ) ) {
+            $wp_scripts->to_do = $this->uniqueFilteredArrays( $wp_scripts->to_do, $done, TRUE );
+            $wp_scripts->done = $this->uniqueFilteredArrays( $wp_scripts->done, $done, FALSE );
+            $registered = TRUE;
+        }
+        return $registered;
     }
 
     private function ensureStylesDeps() {
@@ -149,8 +153,10 @@ class Enqueuer implements EnqueuerInterface {
                 $deps = array_merge( $deps, $GLOBALS[ 'wp_styles' ]->registered[ $id ]->deps );
             }
         } );
-        $enqueue = array_filter( array_unique( $deps ), function($id) {
-            return wp_style_is( $id, 'registered' ) && ! wp_style_is( $id, 'queue' );
+        $enqueue = array_filter( array_unique( $deps ), function($id) use($provided) {
+            return wp_style_is( $id, 'registered' )
+                && ! wp_style_is( $id, 'queue' )
+                && ! in_array( $id, $provided, TRUE );
         } );
         array_walk( $enqueue, function($dep) {
             wp_enqueue_style( $dep );
@@ -162,15 +168,30 @@ class Enqueuer implements EnqueuerInterface {
         $provided = $this->getProvidedScripts();
         array_walk( $provided, function( $id ) use(&$deps) {
             if ( wp_script_is( $id, 'registered' ) ) {
-                $deps = array_merge( $deps, $GLOBALS[ 'wp_script' ]->registered[ $id ]->deps );
+                $deps = array_merge( $deps, $GLOBALS[ 'wp_scripts' ]->registered[ $id ]->deps );
             }
         } );
-        $enqueue = array_filter( array_unique( $deps ), function($id) {
-            return wp_script_is( $id, 'registered' ) && ! wp_script_is( $id, 'queue' );
+        $enqueue = array_filter( array_unique( $deps ), function($id) use($provided) {
+            return wp_script_is( $id, 'registered' )
+                && ! wp_script_is( $id, 'queue' )
+                && ! in_array( $id, $provided, TRUE );
         } );
         array_walk( $enqueue, function($dep) {
             wp_enqueue_script( $dep );
         } );
+    }
+
+    private function getAssetArgs( EnqueuableInterface $asset ) {
+        $args = [ $asset->getHandle(), $asset->getSrc(), $asset->getDeps(), $asset->getVer() ];
+        $args[] = $asset instanceof ScriptInterface ? $asset->isFooter() : $asset->getMedia();
+        return $args;
+    }
+
+    private function uniqueFilteredArrays( $array1, $array2, $array_diff = FALSE ) {
+        $base = ! empty( $array_diff ) ?
+            array_diff( (array) $array1, (array) $array2 ) :
+            array_merge( (array) $array1, (array) $array2 );
+        return array_values( array_filter( array_unique( $base ) ) );
     }
 
 }
