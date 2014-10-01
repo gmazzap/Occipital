@@ -3,7 +3,7 @@
 class Assets extends Facade {
 
     public static function getBindId() {
-        return 'lobe.api';
+        return 'occipital.api';
     }
 
     public static function boot() {
