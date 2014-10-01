@@ -125,6 +125,74 @@ class ContainerTest extends TestCase {
         assertTrue( $scripts->offsetExists( 'foo' ) );
     }
 
+    function testRemoveScriptByObject() {
+        $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
+        $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
+        $scripts = new \ArrayIterator;
+        $scripts[ 'foo' ] = $script;
+        \WP_Mock::wpFunction( 'wp_dequeue_script', [
+            'args'  => [ 'foo' ],
+            'times' => 1
+        ] );
+        global $wp_scripts;
+        $wp_scripts->queue[ 'foo' ] = new \stdClass;
+        $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
+        $c->shouldReceive( 'getSideScripts' )->withNoArgs()->andReturn( $scripts );
+        $c->removeScript( $script );
+        assertFalse( isset( $scripts[ 'foo' ] ) );
+    }
+
+    function testRemoveScriptByHandle() {
+        $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
+        $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
+        $scripts = new \ArrayIterator;
+        $scripts[ 'foo' ] = $script;
+        \WP_Mock::wpFunction( 'wp_dequeue_script', [
+            'args'  => [ 'foo' ],
+            'times' => 1
+        ] );
+        global $wp_scripts;
+        $wp_scripts->queue[ 'foo' ] = new \stdClass;
+        $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
+        $c->shouldReceive( 'getSideScripts' )->withNoArgs()->andReturn( $scripts );
+        $c->removeScript( 'foo' );
+        assertFalse( isset( $scripts[ 'foo' ] ) );
+    }
+
+    function testRemoveStyleByObject() {
+        $style = \Mockery::mock( 'Brain\Occipital\StyleInterface' );
+        $style->shouldReceive( 'getHandle' )->andReturn( 'foo' );
+        $styles = new \ArrayIterator;
+        $styles[ 'foo' ] = $style;
+        \WP_Mock::wpFunction( 'wp_dequeue_style', [
+            'args'  => [ 'foo' ],
+            'times' => 1
+        ] );
+        global $wp_styles;
+        $wp_styles->queue[ 'foo' ] = new \stdClass;
+        $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
+        $c->shouldReceive( 'getSideStyles' )->withNoArgs()->andReturn( $styles );
+        $c->removeStyle( $style );
+        assertFalse( isset( $styles[ 'foo' ] ) );
+    }
+
+    function testRemoveStyleByHandle() {
+        $style = \Mockery::mock( 'Brain\Occipital\StyleInterface' );
+        $style->shouldReceive( 'getHandle' )->andReturn( 'foo' );
+        $styles = new \ArrayIterator;
+        $styles[ 'foo' ] = $style;
+        \WP_Mock::wpFunction( 'wp_dequeue_style', [
+            'args'  => [ 'foo' ],
+            'times' => 1
+        ] );
+        global $wp_styles;
+        $wp_styles->queue[ 'foo' ] = new \stdClass;
+        $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
+        $c->shouldReceive( 'getSideStyles' )->withNoArgs()->andReturn( $styles );
+        $c->removeStyle( 'foo' );
+        assertFalse( isset( $styles[ 'foo' ] ) );
+    }
+
     /**
      * @expectedException \InvalidArgumentException
      */
