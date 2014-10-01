@@ -44,6 +44,38 @@ class API {
     }
 
     /**
+     * Remove a script from queue.
+     *
+     * @param string $handle Script handle
+     * @return \Brain\Occipital\Container
+     */
+    public function removeScript( $handle ) {
+        try {
+            $container = $this->getContainer();
+            $container->removeScript( $handle );
+            return $container;
+        } catch ( Exception $e ) {
+            return \Brain\exception2WPError( $e, 'occipital' );
+        }
+    }
+
+    /**
+     * Remove a style from queue.
+     *
+     * @param string $handle Style handle
+     * @return \Brain\Occipital\Container
+     */
+    public function removeStyle( $handle ) {
+        try {
+            $container = $this->getContainer();
+            $container->removeStyle( $handle );
+            return $container;
+        } catch ( Exception $e ) {
+            return \Brain\exception2WPError( $e, 'occipital' );
+        }
+    }
+
+    /**
      * Enqueue a script object into WordPress queue.
      *
      * @param string $handle    The asset handle
