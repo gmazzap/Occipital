@@ -22,6 +22,20 @@ interface ContainerInterface {
     function addStyle( StyleInterface $style );
 
     /**
+     * Remove a script from the container
+     *
+     * @param \Brain\Occipital\ScriptInterface|string $script Script handle or object
+     */
+    function removeScript( $script );
+
+    /**
+     * Add a style in the container
+     *
+     * @param string|\Brain\Occipital\StyleInterface $style Style handle or object
+     */
+    function removeStyle( $style );
+
+    /**
      * Get added styles
      *
      * * @return \Iterator

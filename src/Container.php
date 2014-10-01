@@ -5,6 +5,8 @@ class Container implements ContainerInterface {
     private static $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
     private $scripts = [ ];
     private $styles = [ ];
+    private $all_scripts = [ ];
+    private $all_styles = [ ];
     private $side;
 
     public function __construct() {
@@ -23,7 +25,8 @@ class Container implements ContainerInterface {
         if ( ! $where ) {
             throw new \UnexpectedValueException;
         }
-        $this->getScripts( $where )->attach( $script );
+        $scripts = $this->getScripts( $where );
+        $scripts[ $script->getHandle() ] = $script;
         return $script;
     }
 
@@ -32,14 +35,45 @@ class Container implements ContainerInterface {
         if ( ! $where ) {
             throw new \UnexpectedValueException;
         }
-        $this->getStyles( $where )->attach( $style );
+        $styles = $this->getStyles( $where );
+        $styles[ $style->getHandle() ] = $style;
         return $style;
+    }
+
+    public function removeScript( $script ) {
+        /** @var \ArrayIterator $scripts */
+        $scripts = $this->getSideScripts();
+        $handle = FALSE;
+        if ( $script instanceof EnqueuableInterface ) {
+            $handle = $script->getHandle();
+        } elseif ( is_string( $script ) ) {
+            $handle = $script;
+        }
+        if ( $handle && $scripts->offsetExists( $handle ) ) {
+            $scripts->offsetUnset( $script->getHandle() );
+        }
+        wp_dequeue_script( $handle );
+    }
+
+    public function removeStyle( $style ) {
+        /** @var \ArrayIterator $styles */
+        $styles = $this->getSideStyles();
+        $handle = FALSE;
+        if ( $style instanceof EnqueuableInterface ) {
+            $handle = $style->getHandle();
+        } elseif ( is_string( $style ) ) {
+            $handle = $style;
+        }
+        if ( $handle && $style->offsetExists( $handle ) ) {
+            $styles->offsetUnset( $style->getHandle() );
+        }
+        wp_dequeue_script( $handle );
     }
 
     /**
      * {@inheritdoc}
      *
-     * @return \SplObjectStorage
+     * @return array|\ArrayIterator
      * @throws \InvalidArgumentException
      */
     public function getScripts( $side = NULL ) {
@@ -56,7 +90,7 @@ class Container implements ContainerInterface {
     /**
      * {@inheritdoc}
      *
-     * @return \SplObjectStorage
+     * @return array|\ArrayIterator
      * @throws \InvalidArgumentException
      */
     public function getStyles( $side = NULL ) {
@@ -74,77 +108,44 @@ class Container implements ContainerInterface {
         return $this->side;
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @return \SplObjectStorage
-     * @throws \RuntimeException
-     */
     public function getSideStyles() {
-        $side = $this->getSide();
-        if ( empty( $side ) ) {
+        if ( is_null( $this->getSide() ) ) {
             throw new \RuntimeException;
         }
-        /** @var \SplObjectStorage $side_styles */
-        $side_styles = $this->getStyles( $this->getSide() );
-        /** @var \SplObjectStorage $all_styles */
-        $all_styles = $this->getStyles( Container::ALL );
-        $all_styles->addAll( $side_styles );
-        return $all_styles;
+        return $this->all_styles;
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @return \SplObjectStorage
-     * @throws \RuntimeException
-     */
     public function getSideScripts() {
-        $side = $this->getSide();
-        if ( empty( $side ) ) {
+        if ( is_null( $this->getSide() ) ) {
             throw new \RuntimeException;
         }
-        /** @var \SplObjectStorage $side_scripts */
-        $side_scripts = $this->getScripts( $this->getSide() );
-        /** @var \SplObjectStorage $all_scripts */
-        $all_scripts = $this->getScripts( Container::ALL );
-        $all_scripts->addAll( $side_scripts );
-        return $all_scripts;
+        return $this->all_scripts;
     }
 
     private function initLogin() {
         add_action( 'login_enqueue_scripts', function() {
             $this->side = self::LOGIN;
-            do_action( 'brain_assets_ready', $this->side, $this );
-            do_action( "brain_assets_ready_{$this->side}", $this );
-            $this->unsetStorage( [ self::ADMIN, self::FRONT ] );
-            do_action( 'brain_assets_done' );
+            $this->firesActions( $this->side );
         }, '-' . PHP_INT_MAX );
     }
 
     private function initAdmin() {
-        add_action( 'admin_enqueue_scripts', function($page) {
+        add_action( 'admin_enqueue_scripts', function() {
             $this->side = self::ADMIN;
-            do_action( 'brain_assets_ready', $this->side, $this, $page );
-            do_action( "brain_assets_ready_{$this->side}", $this, $page );
-            $this->unsetStorage( [ self::LOGIN, self::FRONT ] );
-            do_action( 'brain_assets_done' );
+            $this->firesActions( $this->side );
         }, '-' . PHP_INT_MAX );
     }
 
     private function initFront() {
         add_action( 'wp_enqueue_scripts', function() {
             $this->side = self::FRONT;
-            do_action( 'brain_assets_ready', $this->side, $this );
-            do_action( "brain_assets_ready_{$this->side}", $this );
-            $this->unsetStorage( [ self::LOGIN, self::ADMIN ] );
-            do_action( 'brain_assets_done' );
+            $this->firesActions( $this->side );
         }, '-' . PHP_INT_MAX );
     }
 
     private function setStorage( $side ) {
-        $this->styles[ $side ] = new \SplObjectStorage;
-        $this->scripts[ $side ] = new \SplObjectStorage;
+        $this->styles[ $side ] = new \ArrayIterator;
+        $this->scripts[ $side ] = new \ArrayIterator;
     }
 
     private function unsetStorage( $sides ) {
@@ -161,7 +162,7 @@ class Container implements ContainerInterface {
             return FALSE;
         }
         $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
-        if ( is_null( $side ) ) {
+        if ( empty( $side ) ) {
             $side = $this->getSide() ? : self::ALL;
         }
         if ( ! in_array( $side, $sides, TRUE ) ) {
@@ -171,6 +172,36 @@ class Container implements ContainerInterface {
             return $side;
         }
         return FALSE;
+    }
+
+    private function firesActions( $side ) {
+        do_action( 'brain_assets_ready', $side, $this );
+        do_action( "brain_assets_ready_{$side}", $this );
+        $this->unsetStorage( array_diff( [ self::LOGIN, self::ADMIN, self::FRONT ], [$side ] ) );
+        $this->buildAssetsIterators();
+        do_action( 'brain_assets_remove' );
+        do_action( "brain_assets_remove_{$side}", $this );
+        do_action( 'brain_assets_done' );
+    }
+
+    private function buildAssetsIterators() {
+        $side = $this->getSide();
+        if ( empty( $side ) ) {
+            throw new \RuntimeException;
+        }
+        $side_styles = $this->getStyles( $side );
+        $all_styles = $this->getStyles( Container::ALL );
+        $side_scripts = $this->getScripts( $side );
+        $all_scripts = $this->getScripts( Container::ALL );
+        $this->all_styles = $this->mergeAssets( $side_styles, $all_styles );
+        $this->all_scripts = $this->mergeAssets( $side_scripts, $all_scripts );
+    }
+
+    private function mergeAssets( \Iterator $side, \Iterator $all ) {
+        $iterator = new \AppendIterator();
+        $iterator->append( $side );
+        $iterator->append( $all );
+        return $iterator;
     }
 
 }
