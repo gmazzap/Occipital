@@ -32,13 +32,15 @@ class BrainModule implements \Brain\Module {
             /** @var \Brain\Occipital\Container $container */
             $container = $brain[ 'occipital.container' ];
             $side = $container->getSide();
-            return new Filter( $container->getSideScripts(), $side );
+            $scripts = $container->getSideScripts();
+            return $scripts->valid() ? new Filter( $scripts, $side ) : FALSE;
         } );
         $brain[ 'occipital.styles' ] = $brain->protect( function() use($brain) {
             /** @var \Brain\Occipital\Container $container */
             $container = $brain[ 'occipital.container' ];
             $side = $container->getSide();
-            return new Filter( $container->getSideStyles(), $side );
+            $styles = $container->getSideStyles();
+            return $styles->valid() ? new Filter( $container->getSideStyles(), $side ) : FALSE;
         } );
         $brain[ 'occipital.api' ] = function($c) {
             return new API( $c[ 'occipital.container' ] );
