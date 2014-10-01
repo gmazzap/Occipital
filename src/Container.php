@@ -178,9 +178,9 @@ class Container implements ContainerInterface {
         do_action( 'brain_assets_ready', $side, $this );
         do_action( "brain_assets_ready_{$side}", $this );
         $this->unsetStorage( array_diff( [ self::LOGIN, self::ADMIN, self::FRONT ], [$side ] ) );
-        $this->buildAssetsIterators();
         do_action( 'brain_assets_remove' );
         do_action( "brain_assets_remove_{$side}", $this );
+        $this->buildAssetsIterators();
         do_action( 'brain_assets_done' );
     }
 
