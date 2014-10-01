@@ -44,30 +44,40 @@ class Container implements ContainerInterface {
         /** @var \ArrayIterator $scripts */
         $scripts = $this->getSideScripts();
         $handle = FALSE;
-        if ( $script instanceof EnqueuableInterface ) {
+        if ( $script instanceof ScriptInterface ) {
             $handle = $script->getHandle();
         } elseif ( is_string( $script ) ) {
             $handle = $script;
         }
-        if ( $handle && $scripts->offsetExists( $handle ) ) {
+        if ( empty( $handle ) || ! is_string( $handle ) ) {
+            return;
+        }
+        if ( $scripts->offsetExists( $handle ) ) {
             $scripts->offsetUnset( $script->getHandle() );
         }
-        wp_dequeue_script( $handle );
+        if ( wp_style_is( $handle, 'queue' ) ) {
+            wp_dequeue_script( $handle );
+        }
     }
 
     public function removeStyle( $style ) {
         /** @var \ArrayIterator $styles */
         $styles = $this->getSideStyles();
         $handle = FALSE;
-        if ( $style instanceof EnqueuableInterface ) {
+        if ( $style instanceof StyleInterface ) {
             $handle = $style->getHandle();
         } elseif ( is_string( $style ) ) {
             $handle = $style;
         }
-        if ( $handle && $style->offsetExists( $handle ) ) {
+        if ( empty( $handle ) || ! is_string( $handle ) ) {
+            return;
+        }
+        if ( $styles->offsetExists( $handle ) ) {
             $styles->offsetUnset( $style->getHandle() );
         }
-        wp_dequeue_script( $handle );
+        if ( wp_style_is( $handle, 'queue' ) ) {
+            wp_dequeue_script( $handle );
+        }
     }
 
     /**
