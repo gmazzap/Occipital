@@ -10,7 +10,7 @@ class BrainModule implements \Brain\Module {
         }
         self::$booted = TRUE;
         if ( ! has_action( 'login_enqueue_scripts', 'wp_print_styles' ) ) {
-            add_action( 'login_enqueue_scripts', 'wp_print_styles', 99999 );
+            add_action( 'login_enqueue_scripts', 'wp_print_styles' );
         }
         $brain[ 'occipital.container' ]->init();
         add_action( 'brain_assets_done', function() use($brain) {
@@ -30,16 +30,18 @@ class BrainModule implements \Brain\Module {
         $brain[ 'occipital.scripts' ] = $brain->protect( function() use($brain) {
             /** @var \Brain\Occipital\Container $container */
             $container = $brain[ 'occipital.container' ];
-            $side = $container->getSide();
             $scripts = $container->getSideScripts();
-            return $scripts->valid() ? new Filter( $scripts, $side ) : FALSE;
+            return $scripts instanceof \Iterator && $scripts->valid() ?
+                new Filter( $scripts, $container->getSide() ) :
+                FALSE;
         } );
         $brain[ 'occipital.styles' ] = $brain->protect( function() use($brain) {
             /** @var \Brain\Occipital\Container $container */
             $container = $brain[ 'occipital.container' ];
-            $side = $container->getSide();
             $styles = $container->getSideStyles();
-            return $styles->valid() ? new Filter( $container->getSideStyles(), $side ) : FALSE;
+            return $styles instanceof \Iterator && $styles->valid() ?
+                new Filter( $styles, $container->getSide() ) :
+                FALSE;
         } );
         $brain[ 'occipital.api' ] = function($c) {
             return new API( $c[ 'occipital.container' ] );
