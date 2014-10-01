@@ -37,7 +37,7 @@ class API {
                 throw new \UnexpectedValueException;
             }
             $cb = $asset instanceof ScriptInterface ? 'addScript' : 'addStyle';
-            return $this->container->$cb( $asset, $args[ 'where' ] );
+            return $this->getContainer()->$cb( $asset, $args[ 'where' ] );
         } catch ( \Exception $e ) {
             return \Brain\exception2WPError( $e, 'occipital' );
         }
@@ -155,6 +155,10 @@ class API {
         return $this->addStyle( $handle, $data, Container::ALL );
     }
 
+    public function getContainer() {
+        return $this->container;
+    }
+
     /**
      * @internal
      */
@@ -179,15 +183,15 @@ class API {
     /**
      * @internal
      */
-    private function checkArgs( $what, $handle, $where, $class ) {
+    private function checkArgs( $what, $r_handle, $r_where, $class ) {
         if ( ! in_array( $what, [ self::SCRIPT, self::STYLE ], TRUE ) ) {
             return FALSE;
         }
-        if ( ! is_string( $handle ) || empty( $handle ) ) {
+        if ( ! is_string( $r_handle ) || empty( $r_handle ) ) {
             return FALSE;
         }
-        $handle = preg_replace( '/[^-\w]/', '', $handle );
-        $where = $this->mapWhere( $where );
+        $handle = preg_replace( '/[^-\w]/', '', $r_handle );
+        $where = is_string( $r_where ) && ! empty( $r_where ) ? $this->mapWhere( $r_where ) : '';
         if ( $where === FALSE ) {
             return FALSE;
         }
@@ -226,7 +230,6 @@ class API {
         if ( ! is_string( $where ) ) {
             return FALSE;
         }
-        $where = strtolower( $where );
         $maps = [
             'admin'    => Container::ADMIN,
             'back'     => Container::ADMIN,
@@ -235,11 +238,11 @@ class API {
             'frontend' => Container::FRONT,
             'public'   => Container::FRONT,
             'login'    => Container::LOGIN,
+            'register' => Container::LOGIN,
             '*'        => Container::ALL,
             'all'      => Container::ALL
         ];
-        $search = array_search( $where, $maps );
-        return $search !== FALSE ? $maps[ $search ] : FALSE;
+        return array_key_exists( strtolower( $where ), $maps ) ? $maps[ strtolower( $where ) ] : FALSE;
     }
 
 }
