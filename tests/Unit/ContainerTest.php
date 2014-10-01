@@ -9,7 +9,7 @@ class ContainerTest extends TestCase {
      */
     function testAddFailsIfBadGivenSide() {
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_done' ],
+            'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
@@ -22,7 +22,7 @@ class ContainerTest extends TestCase {
      */
     function testAddFailsIfLateNotGiven() {
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_done' ],
+            'args'   => [ 'brain_assets_done' ],
             'return' => TRUE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
@@ -35,7 +35,7 @@ class ContainerTest extends TestCase {
      */
     function testAddFailsIfLateGiven() {
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_done' ],
+            'args'   => [ 'brain_assets_done' ],
             'return' => TRUE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
@@ -48,11 +48,11 @@ class ContainerTest extends TestCase {
      */
     function testAddFailsIfGivenIsNotCurrentSide() {
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_done' ],
+            'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_ready' ],
+            'args'   => [ 'brain_assets_ready' ],
             'return' => TRUE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
@@ -61,23 +61,23 @@ class ContainerTest extends TestCase {
         $c->addScript( $script, Container::ADMIN );
     }
 
-    /**
-     * @expectedException UnexpectedValueException
-     */
-    function testAddFailsIfNotGivenAndEarly() {
+    function testAddAllIfNotGivenAndEarly() {
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_done' ],
+            'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
+        $scripts = new \SplObjectStorage;
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
         $c->shouldReceive( 'getSide' )->withNoArgs()->andReturnNull();
-        $c->addScript( $script );
+        $c->shouldReceive( 'getScripts' )->with( Container::ALL )->once()->andReturn( $scripts );
+        assertSame( $script, $c->addScript( $script ) );
+        assertTrue( $scripts->contains( $script ) );
     }
 
     function testAddGivenSideOnSameSide() {
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_done' ],
+            'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
@@ -91,11 +91,11 @@ class ContainerTest extends TestCase {
 
     function testAddGivenSideEarly() {
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_done' ],
+            'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_ready' ],
+            'args'   => [ 'brain_assets_ready' ],
             'return' => FALSE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
@@ -109,7 +109,7 @@ class ContainerTest extends TestCase {
 
     function testAddNotGivenSide() {
         \WP_Mock::wpFunction( 'did_action', [
-            'args'   => [ 'lobe_done' ],
+            'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );

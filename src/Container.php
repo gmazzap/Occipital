@@ -162,9 +162,9 @@ class Container implements ContainerInterface {
         }
         $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
         if ( is_null( $side ) ) {
-            $side = $this->getSide();
+            $side = $this->getSide() ? : self::ALL;
         }
-        if ( is_null( $side ) || ! in_array( $side, $sides, TRUE ) ) {
+        if ( ! in_array( $side, $sides, TRUE ) ) {
             return FALSE;
         }
         if ( $side === self::ALL || ( $side === $this->getSide() || ! did_action( 'brain_assets_ready' ) ) ) {
