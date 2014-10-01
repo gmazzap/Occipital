@@ -39,7 +39,7 @@ if ( ! function_exists( 'wp_script_is' ) ) {
         if ( $what === 'enqueue' ) {
             $what = 'queue';
         }
-        return array_key_exists( $handle, $wp_scripts->$what );
+        return isset( $wp_scripts->$what ) && array_key_exists( $handle, (array) $wp_scripts->$what );
     }
 
 }
@@ -54,7 +54,7 @@ if ( ! function_exists( 'wp_style_is' ) ) {
         if ( $what === 'enqueue' ) {
             $what = 'queue';
         }
-        return array_key_exists( $handle, $wp_styles->$what );
+        return isset( $wp_styles->$what ) && array_key_exists( $handle, (array) $wp_styles->$what );
     }
 
 }
