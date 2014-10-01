@@ -14,6 +14,9 @@ abstract class Enqueuable implements EnqueuableInterface {
     }
 
     public function __call( $name, $arguments ) {
+        if ( $name === 'provide' ) {
+            return call_user_func_array( [ $this, 'setProvided' ], $arguments );
+        }
         $method = 'set' . ucfirst( $name );
         if ( method_exists( $this, $method ) ) {
             return call_user_func_array( [ $this, $method ], $arguments );
