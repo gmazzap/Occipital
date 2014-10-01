@@ -7,7 +7,8 @@ if ( ! function_exists( 'wp_enqueue_script' ) ) {
             $wp_scripts = new WP_Scripts;
         }
         $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
-        $args = array_combine( $keys, func_get_args() );
+        $func_args = func_get_args();
+        $args = count( $func_args ) === count( $keys ) ? array_combine( $keys, $func_args ) : $func_args;
         $wp_scripts->registered[ $handle ] = $args;
         $wp_scripts->queue[ $handle ] = $args;
     }
@@ -21,7 +22,8 @@ if ( ! function_exists( 'wp_enqueue_style' ) ) {
             $wp_styles = new WP_Styles;
         }
         $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
-        $args = array_combine( $keys, func_get_args() );
+        $func_args = func_get_args();
+        $args = count( $func_args ) === count( $keys ) ? array_combine( $keys, $func_args ) : $func_args;
         $wp_styles->registered[ $handle ] = $args;
         $wp_styles->queue[ $handle ] = $args;
     }
