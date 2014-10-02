@@ -185,13 +185,16 @@ class Container implements ContainerInterface {
     }
 
     private function firesActions( $side ) {
-        do_action( 'brain_assets_ready', $side, $this );
-        do_action( "brain_assets_ready_{$side}", $this );
-        $this->unsetStorage( array_diff( [ self::LOGIN, self::ADMIN, self::FRONT ], [$side ] ) );
-        do_action( 'brain_assets_remove' );
-        do_action( "brain_assets_remove_{$side}", $this );
-        $this->buildAssetsIterators();
-        do_action( 'brain_assets_done' );
+        $hook = is_admin() ? 'admin_print_styles' : 'wp_print_styles';
+        add_action( $hook, function() use($side) {
+            do_action( 'brain_assets_ready', $side, $this );
+            do_action( "brain_assets_ready_{$side}", $this );
+            $this->unsetStorage( array_diff( [ self::LOGIN, self::ADMIN, self::FRONT ], [ $side ] ) );
+            do_action( 'brain_assets_remove' );
+            do_action( "brain_assets_remove_{$side}", $this );
+            $this->buildAssetsIterators();
+            do_action( 'brain_assets_done' );
+        }, '-' . PHP_INT_MAX );
     }
 
     private function buildAssetsIterators() {
