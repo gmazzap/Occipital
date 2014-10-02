@@ -93,7 +93,7 @@ class EnqueuerTest extends TestCase {
         assertTrue( $e->setup( $cl_styles, $cl_scripts ) );
         assertSame( $scripts, $e->getScripts() );
         assertSame( $provided_scripts, $e->getProvidedScripts() );
-        assertSame( $data, $e->getScriptsData() );
+        assertSame( $data, $e->getContext( 'context', 'scripts_data' ) );
     }
 
     function testSetupEnsureStylesDeps() {
@@ -219,7 +219,7 @@ class EnqueuerTest extends TestCase {
         ];
         $e->shouldReceive( 'getStyles' )->andReturn( [ ] );
         $e->shouldReceive( 'getScripts' )->andReturn( $scripts );
-        $e->shouldReceive( 'getScriptsData' )->andReturn( $data );
+        $e->shouldReceive( 'getContext' )->with( 'context', 'scripts_data' )->andReturn( $data );
         $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ ] );
         $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ ] );
         global $wp_scripts;

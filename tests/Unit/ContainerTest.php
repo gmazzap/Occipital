@@ -235,20 +235,14 @@ class ContainerTest extends TestCase {
         assertInstanceOf( 'ArrayIterator', $cont->getStyles( Container::ALL ) );
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
-    function testGetSideStylesFailsIfNotSide() {
+    function testGetSideStylesNullIfNotSide() {
         $cont = new Container;
-        $cont->getSideStyles();
+        assertNull( $cont->getSideStyles() );
     }
 
-    /**
-     * @expectedException RuntimeException
-     */
-    function testGetSideScriptsFailsIfNotSide() {
+    function testGetSideScriptsNullIfNotSide() {
         $cont = new Container;
-        $cont->getSideScripts();
+        assertNull( $cont->getSideScripts() );
     }
 
 }
