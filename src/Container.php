@@ -135,21 +135,21 @@ class Container implements ContainerInterface {
     private function initLogin() {
         add_action( 'login_enqueue_scripts', function() {
             $this->side = self::LOGIN;
-            $this->firesActions( $this->side );
+            $this->firesActions( 'login' );
         }, '-' . PHP_INT_MAX );
     }
 
     private function initAdmin() {
         add_action( 'admin_enqueue_scripts', function() {
             $this->side = self::ADMIN;
-            $this->firesActions( $this->side );
+            $this->firesActions( 'admin' );
         }, '-' . PHP_INT_MAX );
     }
 
     private function initFront() {
         add_action( 'wp_enqueue_scripts', function() {
             $this->side = self::FRONT;
-            $this->firesActions( $this->side );
+            $this->firesActions( 'front' );
         }, '-' . PHP_INT_MAX );
     }
 
@@ -189,7 +189,9 @@ class Container implements ContainerInterface {
         add_action( $hook, function() use($side) {
             do_action( 'brain_assets_ready', $side, $this );
             do_action( "brain_assets_ready_{$side}", $this );
-            $this->unsetStorage( array_diff( [ self::LOGIN, self::ADMIN, self::FRONT ], [ $side ] ) );
+            $this->unsetStorage(
+                array_diff( [ self::LOGIN, self::ADMIN, self::FRONT ], [ $this->getSide() ] )
+            );
             do_action( 'brain_assets_remove' );
             do_action( "brain_assets_remove_{$side}", $this );
             $this->buildAssetsIterators();
