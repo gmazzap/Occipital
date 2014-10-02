@@ -53,10 +53,6 @@ class Enqueuer implements EnqueuerInterface {
         return array_values( array_unique( $provided ) );
     }
 
-    public function getScriptsData() {
-        return $this->getContext( 'context', 'scripts_data' ) ? : [ ];
-    }
-
     private function setupStyles( \Closure $styles_factory ) {
         /** @var $styles_iterator \Brain\Occipital\FilterInterface */
         $styles_iterator = $styles_factory->__invoke();
@@ -105,7 +101,7 @@ class Enqueuer implements EnqueuerInterface {
         if ( empty( $scripts ) ) {
             return FALSE;
         }
-        $data = $this->getScriptsData();
+        $data = $this->getContext( 'context', 'scripts_data' ) ? : [ ];
         array_walk( $scripts, function( $args ) use($data) {
             call_user_func_array( 'wp_enqueue_script', $args );
             static $i8n_done;

@@ -42,11 +42,4 @@ interface EnqueuerInterface {
      * @return array
      */
     public function getProvidedScripts();
-
-    /**
-     * Get scripts localization data
-     *
-     * @return array
-     */
-    public function getScriptsData();
 }
