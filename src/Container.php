@@ -32,11 +32,11 @@ class Container implements ContainerInterface {
     }
 
     public function getScripts( $side = NULL ) {
-        $this->get( $side, 'scripts' );
+        return $this->get( $side, 'scripts' );
     }
 
     public function getStyles( $side = NULL ) {
-        $this->get( $side, 'styles' );
+        return $this->get( $side, 'styles' );
     }
 
     public function getSide() {
@@ -44,32 +44,28 @@ class Container implements ContainerInterface {
     }
 
     public function setSide( $side ) {
-        if ( is_null( $side ) ) {
+        if ( is_null( $this->side ) ) {
             $this->side = $side;
         }
     }
 
     public function getSideStyles() {
-        if ( ! is_null( $this->getSide() ) ) {
-            return $this->merged_styles;
-        }
+        return $this->merged_styles;
     }
 
     public function getSideScripts() {
-        if ( ! is_null( $this->getSide() ) ) {
-            return $this->merged_scripts;
-        }
+        return $this->merged_scripts;
     }
 
     public function setSideScripts( \Iterator $scripts ) {
-        if ( is_null( $this->merged_scripts ) ) {
+        if ( is_null( $this->getSideScripts() ) ) {
             $this->unsetStorage( 'scripts' );
             $this->merged_scripts = $scripts;
         }
     }
 
     public function setSideStyles( \Iterator $styles ) {
-        if ( is_null( $this->merged_styles ) ) {
+        if ( is_null( $this->getSideStyles() ) ) {
             $this->unsetStorage( 'styles' );
             $this->merged_styles = $styles;
         }
