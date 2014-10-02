@@ -9,8 +9,12 @@ class BrainModule implements \Brain\Module {
             return;
         }
         self::$booted = TRUE;
+        /**
+         * Thanks to Thomas Scholz (toscho)
+         * @see http://wordpress.stackexchange.com/a/127836/
+         */
         if ( ! has_action( 'login_enqueue_scripts', 'wp_print_styles' ) ) {
-            add_action( 'login_enqueue_scripts', 'wp_print_styles' );
+            add_action( 'login_enqueue_scripts', 'wp_print_styles', 11 );
         }
         $brain[ 'occipital.container' ]->init();
         add_action( 'brain_assets_done', function() use($brain) {
