@@ -16,7 +16,7 @@ class BrainModule implements \Brain\Module {
         if ( ! has_action( 'login_enqueue_scripts', 'wp_print_styles' ) ) {
             add_action( 'login_enqueue_scripts', 'wp_print_styles', 11 );
         }
-        $brain[ 'occipital.container' ]->init();
+        $brain[ 'occipital.bootstrapper' ]->boot();
         add_action( 'brain_assets_done', function() use($brain) {
             $enqueuer = $brain[ 'occipital.enqueuer' ];
             $enqueuer->setup( $brain[ 'occipital.styles' ], $brain[ 'occipital.scripts' ] );
@@ -27,6 +27,9 @@ class BrainModule implements \Brain\Module {
     public function getBindings( \Brain\Container $brain ) {
         $brain[ 'occipital.container' ] = function() {
             return new Container;
+        };
+        $brain[ 'occipital.bootstrapper' ] = function($c) {
+            return new Bootstrapper( $c[ 'occipital.container' ] );
         };
         $brain[ 'occipital.enqueuer' ] = function() {
             return new Enqueuer;
