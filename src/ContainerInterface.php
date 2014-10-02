@@ -57,6 +57,13 @@ interface ContainerInterface {
     public function getSide();
 
     /**
+     * Set current "side": backend, frontend, or login page.
+     *
+     * @param int $side Current side constant
+     */
+    public function setSide( $side );
+
+    /**
      * Get added styles specific for current side
      *
      * @return \Iterator
@@ -69,4 +76,14 @@ interface ContainerInterface {
      * * @return \Iterator
      */
     public function getSideScripts();
+
+    /**
+     * Set styles iterator for current side
+     */
+    public function setSideStyles( \Iterator $styles );
+
+    /**
+     * Set scripts iterator for current side
+     */
+    public function setSideScripts( \Iterator $scripts );
 }

@@ -5,8 +5,8 @@ class Container implements ContainerInterface {
     private static $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
     private $scripts = [ ];
     private $styles = [ ];
-    private $all_scripts;
-    private $all_styles;
+    private $merged_scripts;
+    private $merged_styles;
     private $side;
 
     public function __construct() {
@@ -15,142 +15,105 @@ class Container implements ContainerInterface {
         }
     }
 
-    public function init() {
-        $this->initLogin();
-        is_admin() ? $this->initAdmin() : $this->initFront();
-    }
-
     public function addScript( ScriptInterface $script, $side = NULL ) {
-        $where = $this->checkSide( $side );
-        if ( ! $where ) {
-            throw new \UnexpectedValueException;
-        }
-        $scripts = $this->getScripts( $where );
-        $scripts[ $script->getHandle() ] = $script;
-        return $script;
+        return $this->add( $side, $script );
     }
 
     public function addStyle( StyleInterface $style, $side = NULL ) {
-        $where = $this->checkSide( $side );
-        if ( ! $where ) {
-            throw new \UnexpectedValueException;
-        }
-        $styles = $this->getStyles( $where );
-        $styles[ $style->getHandle() ] = $style;
-        return $style;
+        return $this->add( $side, $style );
     }
 
     public function removeScript( $script ) {
-        /** @var \ArrayIterator $scripts */
-        $scripts = $this->getSideScripts();
-        $handle = FALSE;
-        if ( $script instanceof ScriptInterface ) {
-            $handle = $script->getHandle();
-        } elseif ( is_string( $script ) ) {
-            $handle = $script;
-        }
-        if ( empty( $handle ) || ! is_string( $handle ) ) {
-            return;
-        }
-        if ( $scripts->offsetExists( $handle ) ) {
-            $scripts->offsetUnset( $handle );
-        }
-        if ( wp_script_is( $handle, 'queue' ) ) {
-            wp_dequeue_script( $handle );
-        }
+        $this->remove( $script, 'script' );
     }
 
     public function removeStyle( $style ) {
-        /** @var \ArrayIterator $styles */
-        $styles = $this->getSideStyles();
-        $handle = FALSE;
-        if ( $style instanceof StyleInterface ) {
-            $handle = $style->getHandle();
-        } elseif ( is_string( $style ) ) {
-            $handle = $style;
-        }
-        if ( empty( $handle ) || ! is_string( $handle ) ) {
-            return;
-        }
-        if ( $styles->offsetExists( $handle ) ) {
-            $styles->offsetUnset( $handle );
-        }
-        if ( wp_style_is( $handle, 'queue' ) ) {
-            wp_dequeue_style( $handle );
-        }
+        $this->remove( $style, 'style' );
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @return array|\ArrayIterator
-     * @throws \InvalidArgumentException
-     */
     public function getScripts( $side = NULL ) {
-        $scripts = $this->scripts;
-        if ( is_null( $side ) ) {
-            return $scripts;
-        }
-        if ( in_array( $side, self::$sides, TRUE ) && isset( $scripts[ $side ] ) ) {
-            return $scripts[ $side ];
-        }
-        throw new \InvalidArgumentException;
+        $this->get( $side, 'scripts' );
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @return array|\ArrayIterator
-     * @throws \InvalidArgumentException
-     */
     public function getStyles( $side = NULL ) {
-        $styles = $this->styles;
-        if ( is_null( $side ) ) {
-            return $styles;
-        }
-        if ( in_array( $side, self::$sides, TRUE ) && isset( $styles[ $side ] ) ) {
-            return $styles[ $side ];
-        }
-        throw new \InvalidArgumentException;
+        $this->get( $side, 'styles' );
     }
 
     public function getSide() {
         return $this->side;
     }
 
-    public function getSideStyles() {
-        if ( is_null( $this->getSide() ) ) {
-            throw new \RuntimeException;
+    public function setSide( $side ) {
+        if ( is_null( $side ) ) {
+            $this->side = $side;
         }
-        return $this->all_styles;
+    }
+
+    public function getSideStyles() {
+        if ( ! is_null( $this->getSide() ) ) {
+            return $this->merged_styles;
+        }
     }
 
     public function getSideScripts() {
-        if ( is_null( $this->getSide() ) ) {
-            throw new \RuntimeException;
+        if ( ! is_null( $this->getSide() ) ) {
+            return $this->merged_scripts;
         }
-        return $this->all_scripts;
     }
 
-    private function initLogin() {
-        add_action( 'login_enqueue_scripts', function() {
-            $this->side = self::LOGIN;
-            $this->firesActions( 'login' );
-        }, '-' . PHP_INT_MAX );
+    public function setSideScripts( \Iterator $scripts ) {
+        if ( is_null( $this->merged_scripts ) ) {
+            $this->unsetStorage( 'scripts' );
+            $this->merged_scripts = $scripts;
+        }
     }
 
-    private function initAdmin() {
-        add_action( 'admin_enqueue_scripts', function() {
-            $this->side = self::ADMIN;
-            $this->firesActions( 'admin' );
-        }, '-' . PHP_INT_MAX );
+    public function setSideStyles( \Iterator $styles ) {
+        if ( is_null( $this->merged_styles ) ) {
+            $this->unsetStorage( 'styles' );
+            $this->merged_styles = $styles;
+        }
     }
 
-    private function initFront() {
-        add_action( 'wp_enqueue_scripts', function() {
-            $this->side = self::FRONT;
-            $this->firesActions( 'front' );
-        }, '-' . PHP_INT_MAX );
+    private function add( $side, EnqueuableInterface $asset ) {
+        $where = $this->checkSide( $side );
+        if ( ! $where ) {
+            throw new \UnexpectedValueException;
+        }
+        $assets = $asset instanceof StyleInterface ?
+            $this->getStyles( $where ) :
+            $this->getScripts( $where );
+        $assets[ $asset->getHandle() ] = $asset;
+        return $asset;
+    }
+
+    private function remove( $asset, $which ) {
+        if ( $which === 'style' ) {
+            $assets = $this->getSideStyles();
+            $cb = 'wp_dequeue_style';
+        } else {
+            $assets = $this->getSideScripts();
+            $cb = 'wp_dequeue_script';
+        }
+        $handle = $asset instanceof EnqueuableInterface ? $asset->getHandle() : $asset;
+        if ( ! is_string( $handle ) ) {
+            return;
+        }
+        if ( $assets->offsetExists( $handle ) ) {
+            $assets->offsetUnset( $handle );
+        }
+        $cb( $handle );
+    }
+
+    private function get( $side, $which ) {
+        $assets = $this->$which;
+        if ( is_null( $side ) ) {
+            return $assets;
+        }
+        if ( isset( $assets[ $side ] ) ) {
+            return $assets[ $side ];
+        }
+        throw new \InvalidArgumentException;
     }
 
     private function setStorage( $side ) {
@@ -158,11 +121,12 @@ class Container implements ContainerInterface {
         $this->scripts[ $side ] = new \ArrayIterator;
     }
 
-    private function unsetStorage( $sides ) {
+    private function unsetStorage( $which ) {
+        $sides = array_diff( [ self::ADMIN, self::FRONT, self::LOGIN ], [ $this->getSide() ] );
         foreach ( $sides as $side ) {
-            if ( isset( $this->scripts[ $side ] ) ) {
-                $this->scripts[ $side ] = NULL;
-                unset( $this->scripts[ $side ] );
+            if ( isset( $this->$which[ $side ] ) ) {
+                $this->$which[ $side ] = NULL;
+                unset( $this->$which[ $side ] );
             }
         }
     }
@@ -182,41 +146,6 @@ class Container implements ContainerInterface {
             return $side;
         }
         return FALSE;
-    }
-
-    private function firesActions( $side ) {
-        $hook = is_admin() ? 'admin_print_styles' : 'wp_print_styles';
-        add_action( $hook, function() use($side) {
-            do_action( 'brain_assets_ready', $side, $this );
-            do_action( "brain_assets_ready_{$side}", $this );
-            $this->unsetStorage(
-                array_diff( [ self::LOGIN, self::ADMIN, self::FRONT ], [ $this->getSide() ] )
-            );
-            do_action( 'brain_assets_remove' );
-            do_action( "brain_assets_remove_{$side}", $this );
-            $this->buildAssetsIterators();
-            do_action( 'brain_assets_done' );
-        }, '-' . PHP_INT_MAX );
-    }
-
-    private function buildAssetsIterators() {
-        $side = $this->getSide();
-        if ( empty( $side ) ) {
-            throw new \RuntimeException;
-        }
-        $side_styles = $this->getStyles( $side );
-        $all_styles = $this->getStyles( Container::ALL );
-        $side_scripts = $this->getScripts( $side );
-        $all_scripts = $this->getScripts( Container::ALL );
-        $this->all_styles = $this->mergeAssets( $side_styles, $all_styles );
-        $this->all_scripts = $this->mergeAssets( $side_scripts, $all_scripts );
-    }
-
-    private function mergeAssets( \Iterator $side, \Iterator $all ) {
-        $iterator = new \AppendIterator();
-        $iterator->append( $side );
-        $iterator->append( $all );
-        return $iterator;
     }
 
 }
