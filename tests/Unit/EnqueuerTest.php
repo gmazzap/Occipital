@@ -35,12 +35,13 @@ class EnqueuerTest extends TestCase {
     }
 
     function testSetupStyles() {
-        \WP_Mock::wpFunction( 'doing_action', [
-            'args'   => [ 'wp_head' ],
-            'times'  => 1,
-            'return' => TRUE
-        ] );
         $e = new Enqueuer;
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
+        ] );
         $cl_styles = function() {
             return new \ArrayIterator( [
                 'foo' => $this->getStyle( 'foo' ),
@@ -62,12 +63,13 @@ class EnqueuerTest extends TestCase {
     }
 
     function testSetupScripts() {
-        \WP_Mock::wpFunction( 'doing_action', [
-            'args'   => [ 'wp_head' ],
-            'times'  => 1,
-            'return' => TRUE
-        ] );
         $e = new Enqueuer;
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
+        ] );
         $cl_styles = function() {
             return;
         };
@@ -95,10 +97,13 @@ class EnqueuerTest extends TestCase {
     }
 
     function testSetupEnsureStylesDeps() {
-        \WP_Mock::wpFunction( 'doing_action', [
-            'args'   => [ 'wp_head' ],
-            'times'  => 1,
-            'return' => TRUE
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->__construct();
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
         ] );
         $cl = function() {
             return;
@@ -112,7 +117,6 @@ class EnqueuerTest extends TestCase {
             'foo' => (object) [ 'deps' => [ 'y', 'z' ] ],
             'bar' => (object) [ 'deps' => [ 'i' ] ]
         ];
-        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
         $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ 'z', 'foo', 'bar' ] );
         $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ ] );
         assertTrue( $e->setup( $cl, $cl ) );
@@ -121,10 +125,13 @@ class EnqueuerTest extends TestCase {
     }
 
     function testSetupEnsureScriptsDeps() {
-        \WP_Mock::wpFunction( 'doing_action', [
-            'args'   => [ 'wp_head' ],
-            'times'  => 1,
-            'return' => TRUE
+        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->__construct();
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
         ] );
         $cl = function() {
             return;
@@ -138,7 +145,6 @@ class EnqueuerTest extends TestCase {
             'foo' => (object) [ 'deps' => [ 'y', 'z' ] ],
             'bar' => (object) [ 'deps' => [ 'i' ] ]
         ];
-        $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
         $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ ] );
         $e->shouldReceive( 'getProvidedScripts' )->andReturn( [ 'z', 'foo', 'bar' ] );
         assertTrue( $e->setup( $cl, $cl ) );
@@ -147,7 +153,14 @@ class EnqueuerTest extends TestCase {
     }
 
     function testEnqueueDoNothingIfNothingtoDo() {
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
+        ] );
         $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->__construct();
         $e->shouldReceive( 'getStyles' )->andReturn( [ ] );
         $e->shouldReceive( 'getScripts' )->andReturn( [ ] );
         $e->shouldReceive( 'getProvidedStyles' )->andReturn( [ ] );
@@ -156,7 +169,14 @@ class EnqueuerTest extends TestCase {
     }
 
     function testEnqueueStyles() {
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
+        ] );
         $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->__construct();
         $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
         $style_args = function( $id ) {
             return [ $id, "http://www.example.com/css/{$id}.css", [ 'foo', 'bar' ], 1, 'all' ];
@@ -179,7 +199,14 @@ class EnqueuerTest extends TestCase {
     }
 
     function testEnqueueScripts() {
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
+        ] );
         $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->__construct();
         $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
         $script_args = function( $id ) {
             return [ $id, "http://www.example.com/js/{$id}.js", [ 'foo', 'bar' ], 1, TRUE ];
@@ -212,7 +239,14 @@ class EnqueuerTest extends TestCase {
     }
 
     function testEnqueueProvidedStyles() {
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
+        ] );
         $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->__construct();
         $provided_styles = [ 'grey', 'old', 'red' ];
         $e->shouldReceive( 'getStyles' )->andReturn( [ ] );
         $e->shouldReceive( 'getScripts' )->andReturn( [ ] );
@@ -228,7 +262,14 @@ class EnqueuerTest extends TestCase {
     }
 
     function testEnqueueProvidedScripts() {
+        \WP_Mock::wpFunction( 'current_filter', [
+            'return' => 'brain_assets_done'
+        ] );
+        \WP_Mock::wpFunction( 'remove_action', [
+            'args' => [ \WP_Mock\Functions::type( 'string' ), \WP_Mock\Functions::type( 'array' ) ]
+        ] );
         $e = \Mockery::mock( 'Brain\Occipital\Enqueuer' )->makePartial();
+        $e->__construct();
         $provided_scripts = [ 'grey', 'old', 'red' ];
         $e->shouldReceive( 'getStyles' )->andReturn( [ ] );
         $e->shouldReceive( 'getScripts' )->andReturn( [ ] );

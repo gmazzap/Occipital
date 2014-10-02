@@ -11,9 +11,10 @@ class Enqueuer implements EnqueuerInterface {
     }
 
     public function setup( \Closure $styles_factory, \Closure $scripts_factory ) {
-        if ( ! doing_action( 'wp_head' ) ) {
+        if ( current_filter() !== 'brain_assets_done' ) {
             return;
         }
+        remove_action( current_filter(), [$this, __FUNCTION__ ] );
         $this->setupStyles( $styles_factory );
         $this->setupScripts( $scripts_factory );
         $this->ensureStylesDeps();
@@ -22,6 +23,10 @@ class Enqueuer implements EnqueuerInterface {
     }
 
     public function enqueue() {
+        if ( current_filter() !== 'brain_assets_done' ) {
+            return;
+        }
+        remove_action( current_filter(), [ $this, __FUNCTION__ ] );
         $done = [ ];
         $done[ 'styles_enqueue' ] = $this->enqueueStyles();
         $done[ 'scripts_enqueue' ] = $this->enqueueScripts();
@@ -100,9 +105,15 @@ class Enqueuer implements EnqueuerInterface {
         if ( empty( $scripts ) ) {
             return FALSE;
         }
-        array_walk( $scripts, function( $args ) {
+        $data = $this->getScriptsData();
+        array_walk( $scripts, function( $args ) use($data) {
             call_user_func_array( 'wp_enqueue_script', $args );
-            $data = $this->getScriptsData();
+            static $i8n_done;
+            if ( is_null( $i8n_done ) ) {
+                $i8n_done = TRUE;
+                $all_i8n = trim( (string) $this->getContext( 'context', 'i8n_data' ) );
+                $GLOBALS[ 'wp_scripts' ]->add_data( $args[ 0 ], 'data', $all_i8n );
+            }
             if ( isset( $data[ $args[ 0 ] ] ) ) {
                 call_user_func_array( 'wp_localize_script', $data[ $args[ 0 ] ] );
             }
@@ -115,9 +126,15 @@ class Enqueuer implements EnqueuerInterface {
         if ( empty( $styles ) ) {
             return FALSE;
         }
-        array_walk( $styles, function( $args ) {
+        $last = NULL;
+        array_walk( $styles, function( $args ) use(&$last) {
             call_user_func_array( 'wp_enqueue_style', $args );
+            $last = $args[ 0 ];
         } );
+        $after = array_filter( (array) $this->getContext( 'context', 'after_extra' ) );
+        if ( ! empty( $after ) && ! empty( $last ) ) {
+            $GLOBALS[ 'wp_styles' ]->add_data( $last, 'after', $after );
+        }
         return TRUE;
     }
 
@@ -151,15 +168,15 @@ class Enqueuer implements EnqueuerInterface {
         array_walk( $provided, function( $id ) use(&$deps) {
             if ( wp_style_is( $id, 'registered' ) ) {
                 $deps = array_merge( $deps, $GLOBALS[ 'wp_styles' ]->registered[ $id ]->deps );
+                $after = $GLOBALS[ 'wp_styles' ]->get_data( $id, 'after' ) ? : [ ];
+                $all_after = (array) $this->getContext( 'context', 'after_extra' );
+                $this->setContext( 'context', 'after_extra', array_merge( $all_after, $after ) );
             }
         } );
-        $enqueue = array_filter( array_unique( $deps ), function($id) use($provided) {
-            return wp_style_is( $id, 'registered' )
-                && ! wp_style_is( $id, 'queue' )
-                && ! in_array( $id, $provided, TRUE );
-        } );
-        array_walk( $enqueue, function($dep) {
-            wp_enqueue_style( $dep );
+        array_walk( $deps, function($dep) use($provided) {
+            if ( ! in_array( $dep, $provided, TRUE ) ) {
+                wp_enqueue_style( $dep );
+            }
         } );
     }
 
@@ -169,15 +186,15 @@ class Enqueuer implements EnqueuerInterface {
         array_walk( $provided, function( $id ) use(&$deps) {
             if ( wp_script_is( $id, 'registered' ) ) {
                 $deps = array_merge( $deps, $GLOBALS[ 'wp_scripts' ]->registered[ $id ]->deps );
+                $i8n = $GLOBALS[ 'wp_scripts' ]->get_data( $id, 'data' ) ? : '';
+                $all_i8n = (string) $this->getContext( 'context', 'i8n_data' );
+                $this->setContext( 'context', 'i8n_data', $all_i8n . $i8n );
             }
         } );
-        $enqueue = array_filter( array_unique( $deps ), function($id) use($provided) {
-            return wp_script_is( $id, 'registered' )
-                && ! wp_script_is( $id, 'queue' )
-                && ! in_array( $id, $provided, TRUE );
-        } );
-        array_walk( $enqueue, function($dep) {
-            wp_enqueue_script( $dep );
+        array_walk( $deps, function($dep)use($provided) {
+            if ( ! in_array( $dep, $provided, TRUE ) ) {
+                wp_enqueue_script( $dep );
+            }
         } );
     }
 
