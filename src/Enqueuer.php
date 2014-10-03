@@ -104,42 +104,42 @@ class Enqueuer implements EnqueuerInterface {
     }
 
     private function doEnqueueStyles() {
-        $assets = $this->getStyles();
-        if ( empty( $assets ) ) {
+        $styles = $this->getStyles();
+        if ( empty( $styles ) ) {
             return FALSE;
         }
-        $deps = $this->getStylesDeps();
-        $cb = 'wp_enqueue_style';
         $data = $this->getProvidedStylesData();
-        return $this->doEnqueueAssets( array_merge( $deps, $assets ), $cb, $data, 'style' );
-    }
-
-    private function doEnqueueScript() {
-        $assets = $this->getScripts();
-        if ( empty( $assets ) ) {
-            return FALSE;
-        }
-        $deps = $this->getScriptsDeps();
-        $cb = 'wp_enqueue_script';
-        $data = $this->getProvidedScriptsData();
-        $scripts = array_merge( $deps, $assets );
-        return $this->doEnqueueAssets( $scripts, $cb, $data, 'script', $this->getScriptsData() );
-    }
-
-    private function doEnqueueAssets( $assets, $cb, $data, $which, Array $scripts_data = [ ] ) {
-        $data_key = $which === 'style' ? 'after' : 'data';
-        foreach ( $assets as $args ) {
-            call_user_func_array( $cb, (array) $args );
+        foreach ( array_merge( $this->getStylesDeps(), $styles ) as $args ) {
+            call_user_func_array( 'wp_enqueue_style', (array) $args );
             $id = is_string( $args ) ? $args : $args[ 0 ];
-            if ( isset( $scripts_data[ $id ] ) && is_object( $scripts_data[ $id ] ) ) {
-                wp_localize_script( $id, $scripts_data[ $id ]->name, $scripts_data[ $id ]->data );
-            }
             if ( isset( $data[ $id ] ) ) {
-                $_data = $which === 'script' ? implode( '', $data[ $id ] ) : $data[ $id ];
-                $GLOBALS[ "wp_{$which}s" ]->add_data( $id, $data_key, $_data );
+                $GLOBALS[ "wp_styles" ]->add_data( $id, 'after', $data[ $id ] );
             }
         }
         return TRUE;
+    }
+
+    private function doEnqueueScript() {
+        $scripts = $this->getScripts();
+        if ( empty( $scripts ) ) {
+            return FALSE;
+        }
+        $prov_data = $this->getProvidedScriptsData();
+        foreach ( array_merge( $this->getScriptsDeps(), $scripts ) as $args ) {
+            call_user_func_array( 'wp_enqueue_script', (array) $args );
+            $id = is_string( $args ) ? $args : $args[ 0 ];
+            $this->doLocalizeScript( $this->getScriptsData(), $id );
+            if ( isset( $prov_data[ $id ] ) ) {
+                $GLOBALS[ "wp_scripts" ]->add_data( $id, 'data', implode( '', $prov_data[ $id ] ) );
+            }
+        }
+        return TRUE;
+    }
+
+    private function doLocalizeScript( $data, $id ) {
+        if ( isset( $data[ $id ] ) && is_object( $data[ $id ] ) ) {
+            wp_localize_script( $id, $data[ $id ]->name, $data[ $id ]->data );
+        }
     }
 
     private function getAssetArgs( EnqueuableInterface $asset ) {
