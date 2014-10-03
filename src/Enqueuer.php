@@ -57,32 +57,29 @@ class Enqueuer implements EnqueuerInterface {
         $global = $GLOBALS[ "wp_{$which}s" ];
         $global->to_do = array_diff( (array) $global->to_do, $provided );
         $global->done = array_merge( (array) $global->done, $provided );
+        $this->setupAssetProvided( $provided, $which, $args[ 0 ] );
+    }
+
+    private function setupAssetProvided( $provided, $which, $asset_id ) {
+        $global = $GLOBALS[ "wp_{$which}s" ];
         foreach ( $provided as $handle ) {
             $dep = isset( $global->registered[ $handle ] ) ? $global->registered[ $handle ] : FALSE;
             if ( ! $dep instanceof \_WP_Dependency ) {
                 continue;
             }
-            $this->setupProvidedDepData( $dep, $which, $args[ 0 ] );
+            $this->setupProvidedDepData( $dep, $which, $asset_id );
             $all_deps = array_merge( [ $handle ], $dep->deps );
             $this->setupProvidedDeps( $all_deps, $provided, $which );
         }
     }
 
     private function setupProvidedDeps( Array $deps, Array $provided, $which ) {
-        $global = $GLOBALS[ "wp_{$which}s" ];
         foreach ( $deps as $dep ) {
-            if ( ! isset( $global->registered[ $dep ] ) ) {
+            if ( ! in_array( $dep, $provided ) ) {
+                $this->deps[ $which ][] = $dep;
                 continue;
             }
-            $dep_obj = $global->registered[ $dep ];
-            if ( ! in_array( $dep_obj->handle, $provided ) ) {
-                $this->deps[ $which ][] = $dep_obj->handle;
-                continue;
-            }
-            $remove = array_search( $dep_obj->handle, $this->deps[ $which ], TRUE );
-            if ( $remove !== FALSE ) {
-                unset( $this->deps[ $which ][ $remove ] );
-            }
+            $this->deps[ $which ] = array_diff( $this->deps[ $which ], [ $dep ] );
         }
     }
 
