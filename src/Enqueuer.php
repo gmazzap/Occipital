@@ -3,6 +3,7 @@
 class Enqueuer implements EnqueuerInterface {
 
     private $assets = [ 'style' => [ ], 'script' => [ ] ];
+    private $scripts_data = [ ];
     private $deps = [ 'style' => [ ], 'script' => [ ] ];
     private $provided_data = [ 'style' => [ ], 'script' => [ ] ];
 
@@ -30,6 +31,10 @@ class Enqueuer implements EnqueuerInterface {
         return $this->assets[ 'script' ];
     }
 
+    public function getScriptsData() {
+        return $this->scripts_data;
+    }
+
     public function getStylesDeps() {
         return $this->deps[ 'style' ];
     }
@@ -47,9 +52,12 @@ class Enqueuer implements EnqueuerInterface {
     }
 
     private function setupAsset( EnqueuableInterface $asset ) {
-        $which = $asset instanceof StyleInterface ? 'style' : 'script';
+        $which = $asset instanceof ScriptInterface ? 'script' : 'style';
         $args = $this->getAssetArgs( $asset );
         $this->assets[ $which ][] = $args;
+        if ( $which === 'script' ) {
+            $this->scripts_data[ $args[ 0 ] ] = $asset->getLocalizeData();
+        }
         $provided = $asset->getProvided();
         if ( empty( $provided ) ) {
             return;
@@ -90,7 +98,7 @@ class Enqueuer implements EnqueuerInterface {
         $key = $which === 'style' ? 'after' : 'data';
         if ( isset( $dep->extra[ $key ] ) ) {
             $this->provided_data[ $which ][ $asset_id ] = array_merge(
-                $this->provided_data[ $which ][ $asset_id ], $dep->extra[ $key ]
+                $this->provided_data[ $which ][ $asset_id ], (array) $dep->extra[ $key ]
             );
         }
     }
@@ -113,16 +121,22 @@ class Enqueuer implements EnqueuerInterface {
         }
         $deps = $this->getScriptsDeps();
         $cb = 'wp_enqueue_script';
-        $data = implode( '', $this->getProvidedScriptsData() );
-        return $this->doEnqueueAssets( array_merge( $deps, $assets ), $cb, $data, 'script' );
+        $data = $this->getProvidedScriptsData();
+        $scripts = array_merge( $deps, $assets );
+        return $this->doEnqueueAssets( $scripts, $cb, $data, 'script', $this->getScriptsData() );
     }
 
-    private function doEnqueueAssets( $assets, $cb, $data, $which ) {
+    private function doEnqueueAssets( $assets, $cb, $data, $which, Array $scripts_data = [ ] ) {
         $data_key = $which === 'style' ? 'after' : 'data';
         foreach ( $assets as $args ) {
             call_user_func_array( $cb, (array) $args );
-            if ( isset( $data[ $args[ 0 ] ] ) ) {
-                $GLOBALS[ "wp_{$which}s" ]->add_data( $args[ 0 ], $data_key, $data[ $args[ 0 ] ] );
+            $id = is_string( $args ) ? $args : $args[ 0 ];
+            if ( isset( $scripts_data[ $id ] ) && is_object( $scripts_data[ $id ] ) ) {
+                wp_localize_script( $id, $scripts_data[ $id ]->name, $scripts_data[ $id ]->data );
+            }
+            if ( isset( $data[ $id ] ) ) {
+                $_data = $which === 'script' ? implode( '', $data[ $id ] ) : $data[ $id ];
+                $GLOBALS[ "wp_{$which}s" ]->add_data( $id, $data_key, $_data );
             }
         }
         return TRUE;
