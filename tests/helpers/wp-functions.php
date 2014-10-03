@@ -1,34 +1,59 @@
 <?php
+if ( ! function_exists( 'wp_enqueue_asset' ) ) {
+
+    function wp_enqueue_asset( $global, $fargs, $css = FALSE ) {
+        $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
+        $args = count( $fargs ) === count( $keys ) ? array_combine( $keys, $fargs ) : $fargs;
+        $handle = array_shift( $args );
+        if ( $css && ! isset( $global->registered[ $handle ] ) ) {
+            $handle = $handle . '-css';
+        }
+        $args = array_filter( array_merge( [ 'handle' => $handle ], $args ) );
+        if ( ! isset( $global->registered[ $handle ] ) ) {
+            $global->registered[ $handle ] = $args;
+        }
+        if ( ! isset( $global->queue[ $handle ] ) ) {
+            $global->queue[ $handle ] = $args;
+        }
+    }
+
+}
+
+if ( ! function_exists( 'wp_asset_is' ) ) {
+
+    function wp_asset_is( $global, $handle, $what ) {
+        if ( $what === 'enqueue' ) {
+            $what = 'queue';
+        }
+        return isset( $global->$what ) && array_key_exists( $handle, (array) $global->$what );
+    }
+
+}
+
 if ( ! function_exists( 'wp_enqueue_script' ) ) {
 
-    function wp_enqueue_script( $handle ) {
+    function wp_enqueue_script() {
         global $wp_scripts;
         if ( ! $wp_scripts instanceof WP_Scripts ) {
             $wp_scripts = new WP_Scripts;
         }
-        $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
-        $func_args = func_get_args();
-        $args = count( $func_args ) === count( $keys ) ? array_combine( $keys, $func_args ) : $func_args;
-        $wp_scripts->registered[ $handle ] = $args;
-        $wp_scripts->queue[ $handle ] = $args;
+        wp_enqueue_asset( $wp_scripts, func_get_args() );
     }
 
 }
+
 if ( ! function_exists( 'wp_enqueue_style' ) ) {
 
-    function wp_enqueue_style( $handle ) {
+    function wp_enqueue_style() {
         global $wp_styles;
         if ( ! $wp_styles instanceof WP_Styles ) {
             $wp_styles = new WP_Styles;
         }
-        $keys = [ 'handle', 'src', 'deps', 'ver', 'args' ];
-        $func_args = func_get_args();
-        $args = count( $func_args ) === count( $keys ) ? array_combine( $keys, $func_args ) : $func_args;
-        $wp_styles->registered[ $handle ] = $args;
-        $wp_styles->queue[ $handle ] = $args;
+        wp_enqueue_asset( $wp_styles, func_get_args(), TRUE );
     }
 
 }
+
 if ( ! function_exists( 'wp_script_is' ) ) {
 
     function wp_script_is( $handle, $what = 'queue' ) {
@@ -36,10 +61,7 @@ if ( ! function_exists( 'wp_script_is' ) ) {
         if ( ! $wp_scripts instanceof WP_Scripts ) {
             return FALSE;
         }
-        if ( $what === 'enqueue' ) {
-            $what = 'queue';
-        }
-        return isset( $wp_scripts->$what ) && array_key_exists( $handle, (array) $wp_scripts->$what );
+        return wp_asset_is( $wp_scripts, $handle, $what );
     }
 
 }
@@ -51,10 +73,7 @@ if ( ! function_exists( 'wp_style_is' ) ) {
         if ( ! $wp_styles instanceof WP_Styles ) {
             return FALSE;
         }
-        if ( $what === 'enqueue' ) {
-            $what = 'queue';
-        }
-        return isset( $wp_styles->$what ) && array_key_exists( $handle, (array) $wp_styles->$what );
+        return wp_asset_is( $wp_styles, $handle, $what );
     }
 
 }
