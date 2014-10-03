@@ -198,15 +198,22 @@ class API {
         $asset_class = $this->getAssetClass( $args[ 'what' ], $args[ 'class' ] );
         $asset = new $asset_class( $args[ 'handle' ] );
         if ( ! empty( $data ) ) {
-            $valid = array_filter( array_keys( $data ), function( $prop ) use($asset) {
-                return method_exists( $asset, 'set' . ucfirst( $prop ) );
-            } );
-            if ( empty( $valid ) ) {
-                return $asset;
+            $asset = $this->setupAssetData( $asset, $data );
+        }
+        return $asset;
+    }
+
+    /**
+     * @internal
+     */
+    private function setupAssetData( $asset, $data ) {
+        foreach ( $data as $key => $value ) {
+            $method = strpos( $key, 'set' ) === 0 ? $key : 'set' . ucfirst( $key );
+            if ( $method === 'setProvide' ) {
+                $method = 'setProvided';
             }
-            foreach ( $valid as $key ) {
-                $method = 'set' . ucfirst( $key );
-                $asset->$method( $data[ $key ] );
+            if ( method_exists( $asset, $method ) ) {
+                $asset->$method( $value );
             }
         }
         return $asset;
@@ -215,22 +222,21 @@ class API {
     /**
      * @internal
      */
-    private function checkArgs( $what, $r_handle, $r_where, $class ) {
-        if ( ! in_array( $what, [ self::SCRIPT, self::STYLE ], TRUE ) ) {
+    private function checkArgs( $what, $_handle, $_where, $r_class ) {
+        $handle = $this->checkHandle( $_handle );
+        if ( ! in_array( $what, [ self::SCRIPT, self::STYLE ], TRUE ) || empty( $handle ) ) {
             return FALSE;
         }
-        if ( ! is_string( $r_handle ) || empty( $r_handle ) ) {
-            return FALSE;
-        }
-        $handle = preg_replace( '/[^-\w]/', '', $r_handle );
-        $where = is_string( $r_where ) && ! empty( $r_where ) ? $this->mapWhere( $r_where ) : '';
-        if ( $where === FALSE ) {
-            return FALSE;
-        }
-        if ( ! is_null( $class ) && ! class_exists( $class ) ) {
-            return FALSE;
-        }
+        $where = $this->mapWhere( $_where ) ? : NULL;
+        $class = class_exists( $r_class ) ? $r_class : NULL;
         return compact( 'what', 'handle', 'where', 'class' );
+    }
+
+    /**
+     * @internal
+     */
+    private function checkHandle( $handle ) {
+        return is_string( $handle ) ? preg_replace( '/[^-\w\.]/', '', $handle ) : FALSE;
     }
 
     /**
@@ -255,14 +261,11 @@ class API {
      * @internal
      */
     private function mapWhere( $where ) {
-        $valid = [ Container::ADMIN, Container::FRONT, Container::LOGIN, Container::ALL ];
-        if ( is_null( $where ) || in_array( $where, $valid, TRUE ) ) {
+        $valid = [ Container::ADMIN, Container::FRONT, Container::LOGIN, Container::ALL, NULL ];
+        if ( in_array( $where, $valid, TRUE ) ) {
             return $where;
         }
-        if ( ! is_string( $where ) ) {
-            return FALSE;
-        }
-        $maps = [
+        $map = [
             'admin'    => Container::ADMIN,
             'back'     => Container::ADMIN,
             'backend'  => Container::ADMIN,
@@ -274,7 +277,8 @@ class API {
             '*'        => Container::ALL,
             'all'      => Container::ALL
         ];
-        return array_key_exists( strtolower( $where ), $maps ) ? $maps[ strtolower( $where ) ] : FALSE;
+        $key = is_string( $where ) ? strtolower( $where ) : '';
+        return array_key_exists( $key, $map ) ? $map[ $key ] : FALSE;
     }
 
 }
