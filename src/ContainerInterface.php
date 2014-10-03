@@ -68,22 +68,10 @@ interface ContainerInterface {
      *
      * @return \Iterator
      */
-    public function getSideStyles();
-
-    /**
-     * Get added styles specific for current side
-     *
-     * * @return \Iterator
-     */
-    public function getSideScripts();
+    public function getAssetsIterator();
 
     /**
      * Set styles iterator for current side
      */
-    public function setSideStyles( \Iterator $styles );
-
-    /**
-     * Set scripts iterator for current side
-     */
-    public function setSideScripts( \Iterator $scripts );
+    public function setAssetsIterator( \Iterator $assets );
 }

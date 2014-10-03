@@ -18,9 +18,7 @@ class BrainModule implements \Brain\Module {
         }
         $brain[ 'occipital.bootstrapper' ]->boot();
         add_action( 'brain_assets_done', function() use($brain) {
-            $enqueuer = $brain[ 'occipital.enqueuer' ];
-            $enqueuer->setup( $brain[ 'occipital.styles' ], $brain[ 'occipital.scripts' ] );
-            $enqueuer->enqueue();
+            $brain[ 'occipital.enqueuer' ]->enqueue( $brain[ 'occipital.assets_filter' ] );
         }, PHP_INT_MAX );
     }
 
@@ -34,20 +32,12 @@ class BrainModule implements \Brain\Module {
         $brain[ 'occipital.enqueuer' ] = function() {
             return new Enqueuer;
         };
-        $brain[ 'occipital.scripts' ] = $brain->protect( function() use($brain) {
+        $brain[ 'occipital.assets_filter' ] = $brain->protect( function() use($brain) {
             /** @var \Brain\Occipital\Container $container */
             $container = $brain[ 'occipital.container' ];
-            $scripts = $container->getSideScripts();
-            return $scripts instanceof \Iterator && $scripts->valid() ?
-                new Filter( $scripts, $container->getSide() ) :
-                FALSE;
-        } );
-        $brain[ 'occipital.styles' ] = $brain->protect( function() use($brain) {
-            /** @var \Brain\Occipital\Container $container */
-            $container = $brain[ 'occipital.container' ];
-            $styles = $container->getSideStyles();
-            return $styles instanceof \Iterator && $styles->valid() ?
-                new Filter( $styles, $container->getSide() ) :
+            $assets = $container->getAssetsIterator();
+            return $assets instanceof \Iterator && $assets->valid() ?
+                new Filter( $assets, $container->getSide() ) :
                 FALSE;
         } );
         $brain[ 'occipital.api' ] = function($c) {

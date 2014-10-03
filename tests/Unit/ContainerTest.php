@@ -237,7 +237,7 @@ class ContainerTest extends TestCase {
 
     function testGetSideStylesNullIfNotSide() {
         $cont = new Container;
-        assertNull( $cont->getSideStyles() );
+        assertNull( $cont->getAssetsIterator() );
     }
 
     function testGetSideScriptsNullIfNotSide() {

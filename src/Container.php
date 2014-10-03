@@ -5,8 +5,7 @@ class Container implements ContainerInterface {
     private static $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
     private $scripts = [ ];
     private $styles = [ ];
-    private $merged_scripts;
-    private $merged_styles;
+    private $assets_iterator;
     private $side;
 
     public function __construct() {
@@ -49,25 +48,14 @@ class Container implements ContainerInterface {
         }
     }
 
-    public function getSideStyles() {
-        return $this->merged_styles;
+    public function getAssetsIterator() {
+        return $this->assets_iterator;
     }
 
-    public function getSideScripts() {
-        return $this->merged_scripts;
-    }
-
-    public function setSideScripts( \Iterator $scripts ) {
-        if ( is_null( $this->getSideScripts() ) ) {
-            $this->unsetStorage( 'scripts' );
-            $this->merged_scripts = $scripts;
-        }
-    }
-
-    public function setSideStyles( \Iterator $styles ) {
-        if ( is_null( $this->getSideStyles() ) ) {
-            $this->unsetStorage( 'styles' );
-            $this->merged_styles = $styles;
+    public function setAssetsIterator( \Iterator $assets ) {
+        if ( is_null( $this->getAssetsIterator() ) ) {
+            $this->unsetStorage();
+            $this->assets_iterator = $assets;
         }
     }
 
@@ -85,7 +73,7 @@ class Container implements ContainerInterface {
 
     private function remove( $asset, $which ) {
         if ( $which === 'style' ) {
-            $assets = $this->getSideStyles();
+            $assets = $this->getAssetsIterator();
             $cb = 'wp_dequeue_style';
         } else {
             $assets = $this->getSideScripts();
@@ -117,12 +105,16 @@ class Container implements ContainerInterface {
         $this->scripts[ $side ] = new \ArrayIterator;
     }
 
-    private function unsetStorage( $which ) {
+    private function unsetStorage() {
         $sides = array_diff( [ self::ADMIN, self::FRONT, self::LOGIN ], [ $this->getSide() ] );
         foreach ( $sides as $side ) {
-            if ( isset( $this->$which[ $side ] ) ) {
-                $this->$which[ $side ] = NULL;
-                unset( $this->$which[ $side ] );
+            if ( isset( $this->styles[ $side ] ) ) {
+                $this->styles[ $side ] = NULL;
+                unset( $this->styles[ $side ] );
+            }
+            if ( isset( $this->scripts[ $side ] ) ) {
+                $this->scripts[ $side ] = NULL;
+                unset( $this->scripts[ $side ] );
             }
         }
     }
@@ -131,14 +123,13 @@ class Container implements ContainerInterface {
         if ( did_action( 'brain_assets_done' ) ) {
             return FALSE;
         }
-        $sides = [ self::LOGIN, self::ADMIN, self::FRONT, self::ALL ];
         if ( empty( $side ) ) {
             $side = $this->getSide() ? : self::ALL;
         }
-        if ( ! in_array( $side, $sides, TRUE ) ) {
-            return FALSE;
-        }
-        if ( $side === self::ALL || ( $side === $this->getSide() || ! did_action( 'brain_assets_ready' ) ) ) {
+        if (
+            $side === self::ALL
+            || ( $side === $this->getSide() || ! did_action( 'brain_assets_ready' ) )
+        ) {
             return $side;
         }
         return FALSE;
