@@ -66,6 +66,10 @@ class ContainerTest extends TestCase {
             'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
+        \WP_Mock::wpFunction( 'did_action', [
+            'args'   => [ 'brain_assets_ready' ],
+            'return' => FALSE
+        ] );
         $scripts = new \ArrayIterator;
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
         $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
@@ -80,6 +84,10 @@ class ContainerTest extends TestCase {
         \WP_Mock::wpFunction( 'did_action', [
             'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
+        ] );
+        \WP_Mock::wpFunction( 'did_action', [
+            'args'   => [ 'brain_assets_ready' ],
+            'return' => TRUE
         ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
         $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
@@ -115,12 +123,16 @@ class ContainerTest extends TestCase {
             'args'   => [ 'brain_assets_done' ],
             'return' => FALSE
         ] );
+        \WP_Mock::wpFunction( 'did_action', [
+            'args'   => [ 'brain_assets_ready' ],
+            'return' => TRUE
+        ] );
         $script = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
         $script->shouldReceive( 'getHandle' )->andReturn( 'foo' );
         $scripts = new \ArrayIterator;
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
         $c->shouldReceive( 'getSide' )->withNoArgs()->andReturn( Container::FRONT );
-        $c->shouldReceive( 'getScripts' )->with( Container::FRONT )->andReturn( $scripts );
+        $c->shouldReceive( 'getScripts' )->with( Container::ALL )->andReturn( $scripts );
         assertSame( $script, $c->addScript( $script ) );
         assertTrue( $scripts->offsetExists( 'foo' ) );
     }
@@ -137,7 +149,7 @@ class ContainerTest extends TestCase {
         global $wp_scripts;
         $wp_scripts->queue[ 'foo' ] = new \stdClass;
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
-        $c->shouldReceive( 'getSideScripts' )->withNoArgs()->andReturn( $scripts );
+        $c->shouldReceive( 'getAssetsIterator' )->withNoArgs()->andReturn( $scripts );
         $c->removeScript( $script );
         assertFalse( isset( $scripts[ 'foo' ] ) );
     }
@@ -154,7 +166,7 @@ class ContainerTest extends TestCase {
         global $wp_scripts;
         $wp_scripts->queue[ 'foo' ] = new \stdClass;
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
-        $c->shouldReceive( 'getSideScripts' )->withNoArgs()->andReturn( $scripts );
+        $c->shouldReceive( 'getAssetsIterator' )->withNoArgs()->andReturn( $scripts );
         $c->removeScript( 'foo' );
         assertFalse( isset( $scripts[ 'foo' ] ) );
     }
@@ -171,7 +183,7 @@ class ContainerTest extends TestCase {
         global $wp_styles;
         $wp_styles->queue[ 'foo' ] = new \stdClass;
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
-        $c->shouldReceive( 'getSideStyles' )->withNoArgs()->andReturn( $styles );
+        $c->shouldReceive( 'getAssetsIterator' )->withNoArgs()->andReturn( $styles );
         $c->removeStyle( $style );
         assertFalse( isset( $styles[ 'foo' ] ) );
     }
@@ -188,7 +200,7 @@ class ContainerTest extends TestCase {
         global $wp_styles;
         $wp_styles->queue[ 'foo' ] = new \stdClass;
         $c = \Mockery::mock( 'Brain\Occipital\Container' )->makePartial();
-        $c->shouldReceive( 'getSideStyles' )->withNoArgs()->andReturn( $styles );
+        $c->shouldReceive( 'getAssetsIterator' )->withNoArgs()->andReturn( $styles );
         $c->removeStyle( 'foo' );
         assertFalse( isset( $styles[ 'foo' ] ) );
     }
@@ -235,14 +247,9 @@ class ContainerTest extends TestCase {
         assertInstanceOf( 'ArrayIterator', $cont->getStyles( Container::ALL ) );
     }
 
-    function testGetSideStylesNullIfNotSide() {
+    function testGetAssetsIteratorNullIfNotSide() {
         $cont = new Container;
         assertNull( $cont->getAssetsIterator() );
-    }
-
-    function testGetSideScriptsNullIfNotSide() {
-        $cont = new Container;
-        assertNull( $cont->getSideScripts() );
     }
 
 }

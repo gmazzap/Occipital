@@ -9,9 +9,7 @@ class Container implements ContainerInterface {
     private $side;
 
     public function __construct() {
-        foreach ( self::$sides as $side ) {
-            $this->setStorage( $side );
-        }
+        $this->setStorage();
     }
 
     public function addScript( ScriptInterface $script, $side = NULL ) {
@@ -43,7 +41,7 @@ class Container implements ContainerInterface {
     }
 
     public function setSide( $side ) {
-        if ( is_null( $this->side ) ) {
+        if ( is_null( $this->side ) && in_array( $side, self::$sides, TRUE ) ) {
             $this->side = $side;
         }
     }
@@ -53,13 +51,16 @@ class Container implements ContainerInterface {
     }
 
     public function setAssetsIterator( \Iterator $assets ) {
-        if ( is_null( $this->getAssetsIterator() ) ) {
+        if ( is_null( $this->getAssetsIterator() ) && ! is_null( $this->getSide() ) ) {
             $this->unsetStorage();
             $this->assets_iterator = $assets;
         }
     }
 
     private function add( $side, EnqueuableInterface $asset ) {
+        if ( empty( $side ) ) {
+            $side = self::ALL;
+        }
         $where = $this->checkSide( $side );
         if ( ! $where ) {
             throw new \UnexpectedValueException;
@@ -72,13 +73,8 @@ class Container implements ContainerInterface {
     }
 
     private function remove( $asset, $which ) {
-        if ( $which === 'style' ) {
-            $assets = $this->getAssetsIterator();
-            $cb = 'wp_dequeue_style';
-        } else {
-            $assets = $this->getSideScripts();
-            $cb = 'wp_dequeue_script';
-        }
+        $assets = $this->getAssetsIterator();
+        $cb = "wp_dequeue_{$which}";
         $handle = $asset instanceof EnqueuableInterface ? $asset->getHandle() : $asset;
         if ( ! is_string( $handle ) ) {
             return;
@@ -100,22 +96,20 @@ class Container implements ContainerInterface {
         throw new \InvalidArgumentException;
     }
 
-    private function setStorage( $side ) {
-        $this->styles[ $side ] = new \ArrayIterator;
-        $this->scripts[ $side ] = new \ArrayIterator;
+    private function setStorage() {
+        foreach ( self::$sides as $side ) {
+            $this->styles[ $side ] = new \ArrayIterator;
+            $this->scripts[ $side ] = new \ArrayIterator;
+        }
     }
 
     private function unsetStorage() {
-        $sides = array_diff( [ self::ADMIN, self::FRONT, self::LOGIN ], [ $this->getSide() ] );
+        $sides = array_diff( self::$sides, [ $this->getSide(), self::ALL ] );
         foreach ( $sides as $side ) {
-            if ( isset( $this->styles[ $side ] ) ) {
-                $this->styles[ $side ] = NULL;
-                unset( $this->styles[ $side ] );
-            }
-            if ( isset( $this->scripts[ $side ] ) ) {
-                $this->scripts[ $side ] = NULL;
-                unset( $this->scripts[ $side ] );
-            }
+            $this->styles[ $side ] = NULL;
+            $this->scripts[ $side ] = NULL;
+            unset( $this->styles[ $side ] );
+            unset( $this->scripts[ $side ] );
         }
     }
 
@@ -123,16 +117,11 @@ class Container implements ContainerInterface {
         if ( did_action( 'brain_assets_done' ) ) {
             return FALSE;
         }
-        if ( empty( $side ) ) {
-            $side = $this->getSide() ? : self::ALL;
+        if ( ! did_action( 'brain_assets_ready' ) ) {
+            return in_array( $side, self::$sides, TRUE ) ? $side : FALSE;
         }
-        if (
-            $side === self::ALL
-            || ( $side === $this->getSide() || ! did_action( 'brain_assets_ready' ) )
-        ) {
-            return $side;
-        }
-        return FALSE;
+        $valid = [ self::ALL, $this->getSide() ];
+        return in_array( $side, $valid, TRUE ) ? $side : FALSE;
     }
 
 }
