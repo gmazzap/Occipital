@@ -151,7 +151,7 @@ class API {
      * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addFrontStyle( $handle, Array $data = [ ] ) {
-        return $this->addStyle( $handle, $data, Container::ALL );
+        return $this->addStyle( $handle, $data, Container::FRONT );
     }
 
     /**
@@ -173,7 +173,7 @@ class API {
      * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addLoginStyle( $handle, Array $data = [ ] ) {
-        return $this->addStyle( $handle, $data, Container::ADMIN );
+        return $this->addStyle( $handle, $data, Container::LOGIN );
     }
 
     /**
