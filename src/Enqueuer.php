@@ -12,6 +12,12 @@ class Enqueuer implements EnqueuerInterface {
         if ( ! $assets instanceof \Iterator ) {
             return FALSE;
         }
+        if ( ! isset( $GLOBALS[ "wp_styles" ] ) ) {
+            $GLOBALS[ "wp_styles" ] = new \WP_Styles;
+        }
+        if ( ! isset( $GLOBALS[ "wp_scripts" ] ) ) {
+            $GLOBALS[ "wp_scripts" ] = new \WP_Scripts;
+        }
         foreach ( $assets as $asset ) {
             $this->setupAsset( $asset );
         }
