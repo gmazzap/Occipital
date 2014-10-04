@@ -27,7 +27,7 @@ class Filter extends \FilterIterator implements FilterInterface {
         $context = FALSE;
         $logged = FALSE;
         if ( $this->side === Container::ADMIN ) {
-            $context = function_exist( 'get_current_screen' ) ? get_current_screen() : FALSE;
+            $context = function_exists( 'get_current_screen' ) ? get_current_screen() : FALSE;
             $logged = wp_get_current_user();
         }
         if ( $this->side === Container::FRONT ) {
