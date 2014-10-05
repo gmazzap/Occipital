@@ -3,7 +3,7 @@
 class Enqueuer implements EnqueuerInterface {
 
     private $assets = [ 'style' => [ ], 'script' => [ ] ];
-    private $scripts_data = [ ];
+    private $extra_data = [ 'style' => [ ], 'script' => [ ] ];
     private $deps = [ 'style' => [ ], 'script' => [ ] ];
     private $provided_data = [ 'style' => [ ], 'script' => [ ] ];
 
@@ -38,7 +38,11 @@ class Enqueuer implements EnqueuerInterface {
     }
 
     public function getScriptsData() {
-        return $this->scripts_data;
+        return $this->extra_data[ 'script' ];
+    }
+
+    public function getStylesData() {
+        return $this->extra_data[ 'style' ];
     }
 
     public function getStylesDeps() {
@@ -61,9 +65,8 @@ class Enqueuer implements EnqueuerInterface {
         $which = $asset instanceof ScriptInterface ? 'script' : 'style';
         $args = $this->getAssetArgs( $asset );
         $this->assets[ $which ][] = $args;
-        if ( $which === 'script' ) {
-            $this->scripts_data[ $args[ 0 ] ] = $asset->getLocalizeData();
-        }
+        $cb = $which === 'script' ? 'getLocalizeData' : 'getAfter';
+        $this->extra_data[ $which ][ $asset->getHandle() ] = call_user_func( [ $asset, $cb ] );
         $provided = $asset->getProvided();
         if ( empty( $provided ) ) {
             return;
@@ -114,12 +117,14 @@ class Enqueuer implements EnqueuerInterface {
         if ( empty( $styles ) ) {
             return FALSE;
         }
-        $data = $this->getProvidedStylesData();
+        $data = $this->getStylesData();
+        $prov_data = $this->getProvidedStylesData();
         foreach ( array_merge( $this->getStylesDeps(), $styles ) as $args ) {
             call_user_func_array( 'wp_enqueue_style', (array) $args );
             $id = is_string( $args ) ? $args : $args[ 0 ];
-            if ( isset( $data[ $id ] ) ) {
-                $GLOBALS[ "wp_styles" ]->add_data( $id, 'after', $data[ $id ] );
+            $this->doInlineStyle( $data, $id );
+            if ( isset( $prov_data[ $id ] ) ) {
+                $GLOBALS[ "wp_styles" ]->add_data( $id, 'after', $prov_data[ $id ] );
             }
         }
         return TRUE;
@@ -130,11 +135,12 @@ class Enqueuer implements EnqueuerInterface {
         if ( empty( $scripts ) ) {
             return FALSE;
         }
+        $data = $this->getScriptsData();
         $prov_data = $this->getProvidedScriptsData();
         foreach ( array_merge( $this->getScriptsDeps(), $scripts ) as $args ) {
             call_user_func_array( 'wp_enqueue_script', (array) $args );
             $id = is_string( $args ) ? $args : $args[ 0 ];
-            $this->doLocalizeScript( $this->getScriptsData(), $id );
+            $this->doLocalizeScript( $data, $id );
             if ( isset( $prov_data[ $id ] ) ) {
                 $GLOBALS[ "wp_scripts" ]->add_data( $id, 'data', implode( '', $prov_data[ $id ] ) );
             }
@@ -142,8 +148,14 @@ class Enqueuer implements EnqueuerInterface {
         return TRUE;
     }
 
+    private function doInlineStyle( $data, $id ) {
+        if ( ! empty( $data[ $id ] ) ) {
+            wp_add_inline_style( $id, $data[ $id ] );
+        }
+    }
+
     private function doLocalizeScript( $data, $id ) {
-        if ( isset( $data[ $id ] ) && is_object( $data[ $id ] ) ) {
+        if ( is_object( $data[ $id ] ) ) {
             wp_localize_script( $id, $data[ $id ]->name, $data[ $id ]->data );
         }
     }

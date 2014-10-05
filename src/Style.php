@@ -3,6 +3,7 @@
 class Style extends Enqueuable implements StyleInterface {
 
     private $media;
+    private $after;
 
     public function getMedia() {
         return $this->media ? : 'all';
@@ -14,6 +15,16 @@ class Style extends Enqueuable implements StyleInterface {
             $this->media = strtolower( $media );
         }
         return $this;
+    }
+
+    public function setAfter( $inline_style = '' ) {
+        if ( is_string( $inline_style ) ) {
+            $this->after = $inline_style;
+        }
+    }
+
+    public function getAfter() {
+        return $this->after;
     }
 
 }
