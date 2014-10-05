@@ -30,7 +30,7 @@
         "psr-4": {
             "Brain\\Occipital\\": "src/"
         },
-        "classmap": ["Assets.php"]
+        "classmap": ["Occipital.php", "Assets.php"]
     },
     "autoload-dev": {
         "psr-4": {
