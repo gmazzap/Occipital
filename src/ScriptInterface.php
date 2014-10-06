@@ -11,9 +11,9 @@ interface ScriptInterface extends EnqueuableInterface {
      * Setter for the data to set via `wp_localize_script`.
      * Data must be an array with 2 keys: "name" for javascript object name and "data" data itself
      *
-     * @param array $data Array containing data to set
+     * @param array|object $data Array or object containing data to set
      */
-    function setLocalizeData( Array $data );
+    function setLocalizeData( $data );
 
     /**
      * Getter / Setter for "footer" property

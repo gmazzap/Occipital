@@ -2,6 +2,14 @@
 
 interface EnqueuableInterface {
 
+    const SCRIPT = 101;
+    const STYLE = 202;
+
+    /**
+     * Fill all properties form WP registered asset
+     */
+    public function fillFromRegistered();
+
     /**
      * Getter for the asset handle.
      */

@@ -149,14 +149,19 @@ class Enqueuer implements EnqueuerInterface {
     }
 
     private function doInlineStyle( $data, $id ) {
-        if ( ! empty( $data[ $id ] ) ) {
-            wp_add_inline_style( $id, $data[ $id ] );
+        if ( isset( $data[ $id ] ) && is_array( $data[ $id ] ) ) {
+            foreach ( (array) $data[ $id ] as $inline_style ) {
+                wp_add_inline_style( $id, $inline_style );
+            }
         }
     }
 
     private function doLocalizeScript( $data, $id ) {
-        if ( is_object( $data[ $id ] ) ) {
-            wp_localize_script( $id, $data[ $id ]->name, $data[ $id ]->data );
+        if ( ! isset( $data[ $id ] ) || ! is_array( $data[ $id ] ) ) {
+            return;
+        }
+        foreach ( (array) $data[ $id ] as $i18n_data ) {
+            wp_localize_script( $id, $i18n_data->name, (array) $i18n_data->data );
         }
     }
 
