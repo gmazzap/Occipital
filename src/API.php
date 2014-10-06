@@ -3,9 +3,10 @@
 class API {
 
     private $container;
-
-    const SCRIPT = 101;
-    const STYLE = 202;
+    private static $types = [
+        'style'  => EnqueuableInterface::STYLE,
+        'script' => EnqueuableInterface::SCRIPT
+    ];
 
     public function __construct( Container $container ) {
         $this->container = $container;
@@ -84,7 +85,7 @@ class API {
      * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addScript( $handle, Array $data = [ ], $where = NULL ) {
-        return $this->add( self::SCRIPT, $handle, $data, $where );
+        return $this->add( self::$types[ 'script' ], $handle, $data, $where );
     }
 
     /**
@@ -96,7 +97,7 @@ class API {
      * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addStyle( $handle, Array $data = [ ], $where = NULL ) {
-        return $this->add( self::STYLE, $handle, $data, $where );
+        return $this->add( self::$types[ 'style' ], $handle, $data, $where );
     }
 
     /**
@@ -107,7 +108,7 @@ class API {
      * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addFrontScript( $handle, Array $data = [ ] ) {
-        return $this->addScript( $handle, $data, Container::FRONT );
+        return $this->addScript( $handle, $data, ContainerInterface::FRONT );
     }
 
     /**
@@ -118,7 +119,7 @@ class API {
      * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addAdminScript( $handle, Array $data = [ ] ) {
-        return $this->addScript( $handle, $data, Container::ADMIN );
+        return $this->addScript( $handle, $data, ContainerInterface::ADMIN );
     }
 
     /**
@@ -129,7 +130,7 @@ class API {
      * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addLoginScript( $handle, Array $data = [ ] ) {
-        return $this->addScript( $handle, $data, Container::LOGIN );
+        return $this->addScript( $handle, $data, ContainerInterface::LOGIN );
     }
 
     /**
@@ -140,7 +141,7 @@ class API {
      * @return \Brain\Occipital\ScriptInterface|\WP_Error
      */
     public function addSiteScript( $handle, Array $data = [ ] ) {
-        return $this->addScript( $handle, $data, Container::ALL );
+        return $this->addScript( $handle, $data, ContainerInterface::ALL );
     }
 
     /**
@@ -151,7 +152,7 @@ class API {
      * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addFrontStyle( $handle, Array $data = [ ] ) {
-        return $this->addStyle( $handle, $data, Container::FRONT );
+        return $this->addStyle( $handle, $data, ContainerInterface::FRONT );
     }
 
     /**
@@ -162,7 +163,7 @@ class API {
      * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addAdminStyle( $handle, Array $data = [ ] ) {
-        return $this->addStyle( $handle, $data, Container::ADMIN );
+        return $this->addStyle( $handle, $data, ContainerInterface::ADMIN );
     }
 
     /**
@@ -173,7 +174,7 @@ class API {
      * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addLoginStyle( $handle, Array $data = [ ] ) {
-        return $this->addStyle( $handle, $data, Container::LOGIN );
+        return $this->addStyle( $handle, $data, ContainerInterface::LOGIN );
     }
 
     /**
@@ -184,7 +185,7 @@ class API {
      * @return \Brain\Occipital\StyleInterface|\WP_Error
      */
     public function addSiteStyle( $handle, Array $data = [ ] ) {
-        return $this->addStyle( $handle, $data, Container::ALL );
+        return $this->addStyle( $handle, $data, ContainerInterface::ALL );
     }
 
     public function getContainer() {
@@ -224,7 +225,7 @@ class API {
      */
     private function checkArgs( $what, $_handle, $_where, $r_class ) {
         $handle = $this->checkHandle( $_handle );
-        if ( ! in_array( $what, [ self::SCRIPT, self::STYLE ], TRUE ) || empty( $handle ) ) {
+        if ( ! in_array( $what, self::$styles, TRUE ) || empty( $handle ) ) {
             return FALSE;
         }
         $where = $this->mapWhere( $_where ) ? : NULL;
@@ -243,13 +244,17 @@ class API {
      * @internal
      */
     private function getAssetClass( $what, $class ) {
-        $default = $what === self::SCRIPT ? 'Brain\Occipital\Script' : 'Brain\Occipital\Style';
+        $default = $what === self::$styles[ 'script' ] ?
+            'Brain\Occipital\Script' :
+            'Brain\Occipital\Style';
         if ( is_null( $class ) ) {
             $class = $default;
         }
         if ( $class !== $default ) {
             $ref = new \ReflectionClass( $class );
-            $interface = $what === self::SCRIPT ? 'ScriptInterface' : 'StyleInterface';
+            $interface = $what === self::$styles[ 'script' ] ?
+                'ScriptInterface' :
+                'StyleInterface';
             if ( ! $ref->implementsInterface( $interface ) ) {
                 $class = $default;
             }
@@ -261,21 +266,27 @@ class API {
      * @internal
      */
     private function mapWhere( $where ) {
-        $valid = [ Container::ADMIN, Container::FRONT, Container::LOGIN, Container::ALL, NULL ];
+        $valid = [
+            ContainerInterface::ADMIN,
+            ContainerInterface::FRONT,
+            ContainerInterface::LOGIN,
+            ContainerInterface::ALL,
+            NULL
+        ];
         if ( in_array( $where, $valid, TRUE ) ) {
             return $where;
         }
         $map = [
-            'admin'    => Container::ADMIN,
-            'back'     => Container::ADMIN,
-            'backend'  => Container::ADMIN,
-            'front'    => Container::FRONT,
-            'frontend' => Container::FRONT,
-            'public'   => Container::FRONT,
-            'login'    => Container::LOGIN,
-            'register' => Container::LOGIN,
-            '*'        => Container::ALL,
-            'all'      => Container::ALL
+            'admin'    => ContainerInterface::ADMIN,
+            'back'     => ContainerInterface::ADMIN,
+            'backend'  => ContainerInterface::ADMIN,
+            'front'    => ContainerInterface::FRONT,
+            'frontend' => ContainerInterface::FRONT,
+            'public'   => ContainerInterface::FRONT,
+            'login'    => ContainerInterface::LOGIN,
+            'register' => ContainerInterface::LOGIN,
+            '*'        => ContainerInterface::ALL,
+            'all'      => ContainerInterface::ALL
         ];
         $key = is_string( $where ) ? strtolower( $where ) : '';
         return array_key_exists( $key, $map ) ? $map[ $key ] : FALSE;
