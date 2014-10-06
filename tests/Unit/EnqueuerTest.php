@@ -9,20 +9,6 @@ use Brain\Occipital\Enqueuer;
  */
 class EnqueuerTest extends TestCase {
 
-    private function getStyle( $id = '' ) {
-        if ( ! $id ) {
-            $id = uniqid( 'style_' );
-        }
-        $style = \Mockery::mock( 'Brain\Occipital\StyleInterface' );
-        $style->shouldReceive( 'getHandle' )->andReturn( $id );
-        $style->shouldReceive( 'getSrc' )->andReturn( "http://www.example.com/js/{$id}.js" );
-        $style->shouldReceive( 'getDeps' )->andReturn( [ 'foo', 'bar' ] );
-        $style->shouldReceive( 'getVer' )->andReturn( 1 );
-        $style->shouldReceive( 'getMedia' )->andReturn( 'all' );
-        $style->shouldReceive( 'getProvided' )->andReturn( [ 'white', "prov_by_{$id}" ] );
-        return $style;
-    }
-
     private function getAsset( $type = 'style', $id = '', $provided = [ ] ) {
         if ( ! $id ) {
             $id = uniqid( $type );
@@ -31,12 +17,14 @@ class EnqueuerTest extends TestCase {
             $asset = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
             $file = "/js/{$id}.js";
             $asset->shouldReceive( 'isFooter' )->andReturn( TRUE );
-            $data = [ 'name' => "data_{$id}", 'data' => [ 'id' => $id ] ];
-            $asset->shouldReceive( 'getLocalizeData' )->andReturn( (object) $data );
+            $data = (object) [ 'name' => "data_{$id}", 'data' => [ 'id' => $id ] ];
+            $asset->shouldReceive( 'getLocalizeData' )->andReturn( [ $data ] );
         } else {
             $asset = \Mockery::mock( 'Brain\Occipital\StyleInterface' );
             $file = "/css/{$id}.css";
             $asset->shouldReceive( 'getMedia' )->andReturn( 'all' );
+            $after = [ '.foo { display: none; }', '.bar { display: block; }' ];
+            $asset->shouldReceive( 'getAfter' )->andReturn( $after );
         }
         $asset->shouldReceive( 'getHandle' )->andReturn( $id );
         $asset->shouldReceive( 'getDeps' )->andReturn( [ 'foo', 'bar' ] );
@@ -73,6 +61,13 @@ class EnqueuerTest extends TestCase {
                 $this->getAsset( 'script', 'baz' )
                 ] );
         };
+        \WP_Mock::wpFunction( 'wp_add_inline_style', [
+            'times' => 6,
+            'args'  => [
+                \WP_Mock\Functions::anyOf( 'foo', 'bar', 'baz' ),
+                \WP_Mock\Functions::type( 'string' )
+            ]
+        ] );
         \WP_Mock::wpFunction( 'wp_localize_script', [
             'times' => 3,
             'args'  => [
