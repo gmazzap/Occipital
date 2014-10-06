@@ -29,11 +29,19 @@ class Container implements ContainerInterface {
     }
 
     public function getScripts( $side = NULL ) {
-        return $this->get( $side, 'scripts' );
+        return $this->getAssets( $side, 'scripts' );
     }
 
     public function getStyles( $side = NULL ) {
-        return $this->get( $side, 'styles' );
+        return $this->getAssets( $side, 'styles' );
+    }
+
+    public function getScript( $handle ) {
+        return $this->getAsset( $handle, 'script' );
+    }
+
+    public function getStyle( $handle ) {
+        return $this->getAsset( $handle, 'style' );
     }
 
     public function getSide() {
@@ -85,7 +93,7 @@ class Container implements ContainerInterface {
         $cb( $handle );
     }
 
-    private function get( $side, $which ) {
+    private function getAssets( $side, $which ) {
         $assets = $this->$which;
         if ( is_null( $side ) ) {
             return $assets;
@@ -94,6 +102,21 @@ class Container implements ContainerInterface {
             return $assets[ $side ];
         }
         throw new \InvalidArgumentException;
+    }
+
+    private function getAsset( $handle, $which ) {
+        if ( ! is_string( $handle ) ) {
+            throw new \InvalidArgumentException;
+        }
+        $assets = $this->getAssets( NULL, $which );
+        if ( empty( $assets ) ) {
+            return;
+        }
+        foreach ( self::$sides as $side ) {
+            if ( isset( $assets[ $side ] ) && isset( $assets[ $side ][ $handle ] ) ) {
+                return $assets[ $side ][ $handle ];
+            }
+        }
     }
 
     private function setStorage() {

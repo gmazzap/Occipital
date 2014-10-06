@@ -50,6 +50,20 @@ interface ContainerInterface {
     function getScripts();
 
     /**
+     * Get an added style by handle
+     *
+     * * @return \Brain\Occipital\StyleInterface
+     */
+    function getStyle( $handle );
+
+    /**
+     * Get an added script by handle
+     *
+     * * @return \Brain\Occipital\ScriptInterface
+     */
+    function getScript( $handle );
+
+    /**
      * Return one of interface constants related to current "side": backend, frontend, or login page.
      *
      * @return int Current side constant
