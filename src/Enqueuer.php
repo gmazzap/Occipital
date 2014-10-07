@@ -12,12 +12,7 @@ class Enqueuer implements EnqueuerInterface {
         if ( ! $assets instanceof \Iterator ) {
             return FALSE;
         }
-        if ( ! isset( $GLOBALS[ "wp_styles" ] ) ) {
-            $GLOBALS[ "wp_styles" ] = new \WP_Styles;
-        }
-        if ( ! isset( $GLOBALS[ "wp_scripts" ] ) ) {
-            $GLOBALS[ "wp_scripts" ] = new \WP_Scripts;
-        }
+        $this->setupGlobals();
         foreach ( $assets as $asset ) {
             $this->setupAsset( $asset );
         }
@@ -61,9 +56,21 @@ class Enqueuer implements EnqueuerInterface {
         return $this->provided_data[ 'script' ];
     }
 
+    private function setupGlobals() {
+        $GLOBALS[ 'wp_styles' ] = isset( $GLOBALS[ 'wp_styles' ] ) ?
+            Styles::buildFromWp( $GLOBALS[ 'wp_styles' ] ) :
+            new Styles;
+        $GLOBALS[ 'wp_scripts' ] = isset( $GLOBALS[ 'wp_scripts' ] ) ?
+            Scripts::buildFromWp( $GLOBALS[ 'wp_scripts' ] ) :
+            new Scripts;
+    }
+
     private function setupAsset( EnqueuableInterface $asset ) {
         $which = $asset instanceof ScriptInterface ? 'script' : 'style';
         $args = $this->getAssetArgs( $asset );
+        if ( ! is_array( $args ) ) {
+            return;
+        }
         $this->assets[ $which ][] = $args;
         $cb = $which === 'script' ? 'getLocalizeData' : 'getAfter';
         $this->extra_data[ $which ][ $asset->getHandle() ] = call_user_func( [ $asset, $cb ] );
@@ -92,7 +99,7 @@ class Enqueuer implements EnqueuerInterface {
 
     private function setupProvidedDeps( Array $deps, Array $provided, $which ) {
         foreach ( $deps as $dep ) {
-            if ( ! in_array( $dep, $provided ) ) {
+            if ( ! in_array( $dep, $provided, TRUE ) ) {
                 $this->deps[ $which ][] = $dep;
                 continue;
             }
@@ -166,7 +173,12 @@ class Enqueuer implements EnqueuerInterface {
     }
 
     private function getAssetArgs( EnqueuableInterface $asset ) {
-        $args = [ $asset->getHandle(), $asset->getSrc(), $asset->getDeps(), $asset->getVer() ];
+        $handle = $asset->getHandle();
+        $src = $asset->getSrc();
+        if ( empty( $handle ) || empty( $src ) ) {
+            return FALSE;
+        }
+        $args = [ $handle, $src, $asset->getDeps(), $asset->getVer() ];
         $args[] = $asset instanceof ScriptInterface ? $asset->isFooter() : $asset->getMedia();
         return $args;
     }
