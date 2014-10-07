@@ -34,7 +34,7 @@ class Filter extends \FilterIterator implements FilterInterface {
             $context = $GLOBALS[ 'wp_query' ];
             $logged = is_user_logged_in() ? wp_get_current_user() : FALSE;
         }
-        return [ $context, $this->side, $logged ];
+        return [ $context, $logged, $this->side ];
     }
 
 }
