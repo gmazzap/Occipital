@@ -188,6 +188,48 @@ class API {
         return $this->addStyle( $handle, $data, ContainerInterface::ALL );
     }
 
+    /**
+     * Get an asset object from ontainer.
+     *
+     * @param int $what
+     * @param string $handle
+     * @return Brain\Occipital\EnqueuableInterface
+     */
+    public function getAsset( $what, $handle ) {
+        if ( ! in_array( $what, self::$types, TRUE ) || ! is_string( $handle ) || empty( $handle ) ) {
+            return;
+        }
+        if ( $what === EnqueuableInterface::STYLE ) {
+            return $this->getContainer()->getStyle( $handle );
+        }
+        return $this->getContainer()->getScript( $handle );
+    }
+
+    /**
+     * Get a style object from ontainer.
+     *
+     * @param string $handle
+     * @return Brain\Occipital\StyleInterface
+     */
+    public function getStyle( $handle ) {
+        return $this->getAsset( EnqueuableInterface::STYLE, $handle );
+    }
+
+    /**
+     * Get a script object from ontainer.
+     *
+     * @param string $handle
+     * @return Brain\Occipital\ScriptInterface
+     */
+    public function getScript( $handle ) {
+        return $this->getAsset( EnqueuableInterface::SCRIPT, $handle );
+    }
+
+    /**
+     * Return Container instance
+     *
+     * @return Brain\Occipital\ContainerInterface
+     */
     public function getContainer() {
         return $this->container;
     }
@@ -225,7 +267,7 @@ class API {
      */
     private function checkArgs( $what, $_handle, $_where, $r_class ) {
         $handle = $this->checkHandle( $_handle );
-        if ( ! in_array( $what, self::$styles, TRUE ) || empty( $handle ) ) {
+        if ( ! in_array( $what, self::$types, TRUE ) || empty( $handle ) ) {
             return FALSE;
         }
         $where = $this->mapWhere( $_where ) ? : NULL;
@@ -244,7 +286,7 @@ class API {
      * @internal
      */
     private function getAssetClass( $what, $class ) {
-        $default = $what === self::$styles[ 'script' ] ?
+        $default = $what === self::$types[ 'script' ] ?
             'Brain\Occipital\Script' :
             'Brain\Occipital\Style';
         if ( is_null( $class ) ) {
@@ -252,7 +294,7 @@ class API {
         }
         if ( $class !== $default ) {
             $ref = new \ReflectionClass( $class );
-            $interface = $what === self::$styles[ 'script' ] ?
+            $interface = $what === self::$types[ 'script' ] ?
                 'ScriptInterface' :
                 'StyleInterface';
             if ( ! $ref->implementsInterface( $interface ) ) {
