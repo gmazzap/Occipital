@@ -12,9 +12,9 @@ class Scripts extends \WP_Scripts {
     }
 
     public function do_item( $handle, $group = false ) {
-        do_action( 'doing_script', $handle );
+        do_action( 'brain_doing_script', $handle );
         $done = parent::do_item( $handle, $group );
-        do_action( 'after_script_done', $handle, $done );
+        do_action( 'brain_script_done', $handle, $done );
     }
 
 }

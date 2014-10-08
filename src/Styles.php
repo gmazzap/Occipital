@@ -12,9 +12,9 @@ class Styles extends \WP_Styles {
     }
 
     public function do_item( $handle, $group = false ) {
-        do_action( 'doing_style', $handle );
+        do_action( 'brain_doing_style', $handle );
         $done = parent::do_item( $handle, $group );
-        do_action( 'after_style_done', $handle, $done );
+        do_action( 'brain_style_done', $handle, $done );
     }
 
 }
