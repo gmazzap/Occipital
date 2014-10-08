@@ -50,7 +50,7 @@ class ScriptTest extends TestCase {
         $s->fillFromRegistered();
         assertSame( $s->getSrc(), 'path/to/foo' );
         assertSame( $s->getDeps(), [ ] );
-        assertFalse( $s->isFooter() );
+        assertFalse( $s->getFooter() );
         assertSame( [ ], $s->getLocalizeData() );
     }
 
@@ -81,7 +81,7 @@ class ScriptTest extends TestCase {
         $s->fillFromRegistered();
         assertSame( $s->getSrc(), 'path/to/foo' );
         assertSame( $s->getDeps(), [ ] );
-        assertTrue( $s->isFooter() );
+        assertTrue( $s->getFooter() );
         assertEquals( $exp_data, $s->getLocalizeData() );
     }
 

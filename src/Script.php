@@ -22,11 +22,15 @@ class Script extends Enqueuable implements ScriptInterface {
         return $this;
     }
 
-    public function isFooter( $set = NULL ) {
+    public function setFooter( $set = NULL ) {
         if ( ! is_null( $set ) ) {
             $this->is_footer = ! empty( $set );
         }
         return is_null( $set ) ? $this->is_footer : $this;
+    }
+
+    public function getFooter() {
+        return $this->is_footer;
     }
 
     public function fillFromRegistered() {
@@ -40,7 +44,7 @@ class Script extends Enqueuable implements ScriptInterface {
         $this->setVer( $dep->ver );
         $this->setMedia( $dep->args );
         if ( isset( $dep->extra[ 'group' ] ) ) {
-            $this->isFooter(  ! empty( (int) $dep->extra[ 'group' ] ) );
+            $this->setFooter(  ! empty( (int) $dep->extra[ 'group' ] ) );
         }
         if ( isset( $dep->extra[ 'data' ] ) ) {
             $this->parseRegisteredData( $dep->extra[ 'data' ] );

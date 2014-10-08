@@ -16,7 +16,7 @@ class EnqueuerTest extends TestCase {
         if ( $type === 'script' ) {
             $asset = \Mockery::mock( 'Brain\Occipital\ScriptInterface' );
             $file = "/js/{$id}.js";
-            $asset->shouldReceive( 'isFooter' )->andReturn( TRUE );
+            $asset->shouldReceive( 'getFooter' )->andReturn( TRUE );
             $data = (object) [ 'name' => "data_{$id}", 'data' => [ 'id' => $id ] ];
             $asset->shouldReceive( 'getLocalizeData' )->andReturn( [ $data ] );
         } else {

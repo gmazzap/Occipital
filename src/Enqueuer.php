@@ -179,7 +179,7 @@ class Enqueuer implements EnqueuerInterface {
             return FALSE;
         }
         $args = [ $handle, $src, $asset->getDeps(), $asset->getVer() ];
-        $args[] = $asset instanceof ScriptInterface ? $asset->isFooter() : $asset->getMedia();
+        $args[] = $asset instanceof ScriptInterface ? $asset->getFooter() : $asset->getMedia();
         return $args;
     }
 

@@ -16,8 +16,16 @@ interface ScriptInterface extends EnqueuableInterface {
     function setLocalizeData( $data );
 
     /**
-     * Getter / Setter for "footer" property
+     * Getter for "footer" property.
+     *
+     * @return bool
+     */
+    function getFooter();
+
+    /**
+     * Setter for "footer" property.
+     *
      * @param bool $set
      */
-    function isFooter( $set = NULL );
+    function setFooter( $set = NULL );
 }
