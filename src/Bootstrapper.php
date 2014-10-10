@@ -30,9 +30,9 @@ class Bootstrapper implements BootstrapperInterface {
     }
 
     private function bootAdmin() {
-        add_action( 'admin_enqueue_scripts', function() {
+        add_action( 'admin_enqueue_scripts', function( $hook_suffix ) {
             $this->side = ContainerInterface::ADMIN;
-            $this->firesActions( 'admin' );
+            $this->firesActions( 'admin', $hook_suffix );
         }, '-' . PHP_INT_MAX );
     }
 
@@ -43,8 +43,8 @@ class Bootstrapper implements BootstrapperInterface {
         }, '-' . PHP_INT_MAX );
     }
 
-    private function firesActions( $side ) {
-        $hook = is_admin() ? 'admin_print_styles' : 'wp_print_styles';
+    private function firesActions( $side, $hook_suffix = '' ) {
+        $hook = is_admin() ? "admin_print_styles-{$hook_suffix}" : 'wp_print_styles';
         add_action( $hook, function() use($side) {
             $this->getContainer()->setSide( $this->getSide() );
             do_action( 'brain_assets_ready', $side, $this->getContainer() );
