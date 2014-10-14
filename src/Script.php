@@ -44,7 +44,7 @@ class Script extends Enqueuable implements ScriptInterface {
         $this->setVer( $dep->ver );
         $this->setMedia( $dep->args );
         if ( isset( $dep->extra[ 'group' ] ) ) {
-            $this->setFooter(  ! empty( (int) $dep->extra[ 'group' ] ) );
+            $this->setFooter(  ! empty( $dep->extra[ 'group' ] ) );
         }
         if ( isset( $dep->extra[ 'data' ] ) ) {
             $this->parseRegisteredData( $dep->extra[ 'data' ] );
