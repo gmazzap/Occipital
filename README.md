@@ -41,7 +41,7 @@ All the things in Occipital can be done via API class: **`Brain\Assets`**.
 
 Before do any call, you should wait for `'brain_loaded'` hook, or `'init'` if you prefer core hooks.
 
-Add a script is just a matter of:
+Below an example with all the methods available for scripts (only 2 are required):
 
 ``` php
 <?php
@@ -53,8 +53,8 @@ Brain\Assets::addScript( 'my-script', 'front' )
   ->isFooter( TRUE )
   ->localizeData( [ 'name' => 'MyData', 'data' => [ 'foo' => 'bar' ] ] )
   ->condition( function( $query, $user ) {
-  return $query->is_front_page() && user_can( $user, 'edit_pages' );
-});
+    return $query->is_front_page() && user_can( $user, 'edit_pages' );
+  });
 ```
 
 **`addScript`** method allows to add script in frontend, backend and login pages. To add asset in a specific place is possible:
@@ -63,18 +63,18 @@ Brain\Assets::addScript( 'my-script', 'front' )
 ``` php
 Brain\Assets::addScript( 'my-script', 'front' ) // or 'admin' or 'login'
 ```
-- use a dedicaded API method like `addFrontScript`, `addAdminScript` or `addLoginScript`
+- use a specific API method like `addFrontScript`, `addAdminScript` or `addLoginScript`
 - call the API method on a specific hook, like `"wp_enqueue_scripts"` or `"admin_enqueue_scripts"`. Occipital also provide custom alternative hooks, see [Occipital hooks](#occipital-hooks) for further details.
 
-API methods return the instance of asset object jsu added, or a `WP_Error` if something goes wrong.
+API methods return the instance of asset object just added, or a `WP_Error` if something goes wrong.
 
 For styles there are similar methods: **`addStyle`**, **`addFrontStyle`**... and so on.
 
 Improvements against core are:
 
-- "`provide`" arguments that let's save http request
+- "`provide`" arguments that let's save HTTP requests
 - one API to rule all functions
-- assets properties get/update after addition made easy
+- assets properties get / update after addition made easy
 - expressive fluent API: non need to remember exact order of arguments
 - condition callback with rich context (`WP_Query` + `WP_User` in frontend, WP_Screen + `WP_User` in backend)
 - OOP code: easy to embed in OOP projects and easy testing with mocks in unit tests.
@@ -113,6 +113,17 @@ composer install --no-dev
 ```
 
 Don't forget the `--no-dev` flag before using in production, otherwise all the dev dependencies with related autoload stuff will be loaded on every page load, substantially slowing down your page loading.
+
+
+----------
+
+#Compatibility
+
+Occipital is 100% compatible with core workflow and to all themes and plugins that uses the proper,
+recommended way to enqueue assets to WordPress sites.
+
+Code that not use recommended hooks or directly print style and script tags to page markup
+is not compatible with Occipital, and anyway they are doing it wrong.
 
 
 ----------
@@ -204,19 +215,19 @@ addStyle( $handle, $args, $where )
 
 If nothing is given for `$where` than "all" is assumed, so the asset will be added in frontend, in backend and in login pages.
 
-To add assets on a specific place, there are specific methods:
+To add assets on a specific place there are specific methods:
 
-**`addFrontStyle`** / **`addFrontScript`** (for frontend)
-**`addAdminStyle`** / **`addAdminScript`** (for backend)
-**`addLoginStyle`** / **`addLoginScript`** (for login page)
-**`addSiteStyle`** / **`addSiteScript`** (for site-wide assets, i.e. everywhere)
+- **`addFrontStyle`** / **`addFrontScript`** (for frontend)
+- **`addAdminStyle`** / **`addAdminScript`** (for backend)
+- **`addLoginStyle`** / **`addLoginScript`** (for login page)
+- **`addSiteStyle`** / **`addSiteScript`** (for site-wide assets, i.e. everywhere)
 
 
 ###Arguments summary
 
-Second argument for `add*` methods is `$args` where is possible to set all the arguments for the asset.
+Second argument for `add*` methods is `$args`, an array that can be used to set all the arguments for the asset.
 
-Below there is the complete list of supported keys for it:
+Below there is the complete list of supported keys:
 
 - **`src`** (string) Asset full url
 - **`deps`** (array) Array of asset dependencies
@@ -306,15 +317,15 @@ The condition callback receives 3 arguments:
 
 ###Provide
 
-Provide allows to set an array of assets that are "contained" in the assed being added, it will avoid WordPress to load that files while ensuring compatibility with third party code.
+Provide allows to set an array of assets that are "contained" in the asset being added, it will avoid WordPress to load that files while ensuring compatibility with third party code.
 
-Big problem with WordPress assets is the high number of http requests a typical page has (have you read the [blog post](http://gm.zoomlab.it/2014/whats-wrong-with-styles-and-scripts-in-wordpress/)?).
+A big problem with WordPress assets is the high number of HTTP requests a typical page has (have you read the [blog post](http://gm.zoomlab.it/2014/whats-wrong-with-styles-and-scripts-in-wordpress/)?).
 
-If an user have 20 plugins installed and half of them add a script and a style, and a couple of styles and scripts are added by theme, a page loading will require 24 http requests to load everything.
+If an user has 20 plugins installed and half of them add a script and a style, and a couple of styles and scripts are added by theme, a page loading will require 24 http requests to load everything.
 
 That's quite crazy.
 
-Occipital approach is simple: it allows site owners to enqueue *concatenated* scripts and styles, and declare wich assets are shipped in the "big" file, to ensure compatibility with any other code added later.
+Occipital approach is simple: it allows site owners to enqueue *concatenated* scripts and styles, and declare wich assets are shipped in the "big" file, to ensure compatibility with any other code.
 
 As example, let's assume in a site header there is
 
@@ -353,7 +364,7 @@ The style from this plugin will be enqueued as expected, `thickbox` will be adde
 
 ####Gotchas for "provided" styles on login pages
 
-If a site owner use `provide` Occipital feature to include in a custom concatenated file styles provided by core for **login** page (their handles are `'buttons'`, `'open-sans'`, `'dashicons'`, `'login'`) it will **not work**. Reason is that core styles in login pages are printed with a direct call to [`wp_admin_css`](https://developer.wordpress.org/reference/functions/wp_admin_css/) that can't be filtered, and also run *before* `"login_enqueue_scripts"` so any style added using that hook are taken into account when core styles are already printed. The `provide` feature works as expected for custom styles in login pages.
+If a site owner use `provide` Occipital feature to include, in a custom concatenated file, some of the styles core uses for **login** page (their handles are `'buttons'`, `'open-sans'`, `'dashicons'`, `'login'`) it will **not work**. Reason is that core styles in login pages are printed with a direct call to [`wp_admin_css`](https://developer.wordpress.org/reference/functions/wp_admin_css/) that can't be filtered, and also run *before* `"login_enqueue_scripts"` so any style added using that hook are taken into account when core styles are already printed. The `provide` feature works as expected for custom styles in login pages.
 
 
 ###Big warning for developers
@@ -373,7 +384,7 @@ Brain\Assets::addFrontScript( 'pluginscript' )
 
 It means that the script added by plugin contains a version of jQuery and jQuery UI.
 
-What happen if another plugin provides that scripts *again*? Only thing Occipital can do is to enqueue again those scripts, because it can't be able to remove a portion from a concatenated file...
+What happen if another plugin provides that scripts *again*? Only thing Occipital can do in that case is to enqueue again those scripts, because it can't be able to remove a portion from a concatenated file...
 
 However, developers can benefit from `provide` feature in assets management for own plugins.
 
@@ -407,7 +418,11 @@ In this way, users of premium addon, instead of 4 http request will have only 2.
 
 Sure, the owner of the site where plugin is installed can embed `'awesome_plugin_premium_script'` in a big concatenated file, together with other plugins scripts, but great majority of users will not do that, and halve HTTP requests for a plugin is a good thing, anyway.
 
-In summary, **developers should use the "provide" feature to reduce HTTP requests of own plugins assets, but *never* use it to ship core assets**.
+Another use case can be include parent theme style from child theme, avoiding `@import` in CSS and
+ensuring compatibility with any style that has parent theme CSS as dependency.
+
+In summary, **developers should use the "provide" feature to reduce HTTP requests of own plugins or theme  assets,
+but *never* use it to ship core assets**.
 
 
 ----------
@@ -415,11 +430,12 @@ In summary, **developers should use the "provide" feature to reduce HTTP request
 
 ##Removing assets
 
-Sometimes one needs to remove assets. In Occipital you can remove only assets added using Occipital.
+Sometimes one needs to remove assets. In Occipital (at the moment) you can remove only assets added using Occipital.
 
 That is done via **`removeStyle`** and **`removeScript`** API methods.
 
-Only argument accepted is the asset handle. Of course to remove an asset, one needs to be sure that the callback that adds it already ran. Unlike WordPress, Occipital provides a specific hook for the scope (or better, 4 hooks): `"brain_assets_remove"`that is fired in all "sides" (frontend, backend and login pages) and other three side-specific hooks. More info in the [Occipital hooks](#occipital-hooks) paragraph.
+Only argument accepted by thos methods is the asset handle.
+Of course to remove an asset, one needs to be sure that the callback that adds it already ran. Unlike WordPress, Occipital provides a specific hook for the scope (or better, 4 hooks): `"brain_assets_remove"`that is fired in all "sides" (frontend, backend and login pages) and other three side-specific hooks. More info in the [Occipital hooks](#occipital-hooks) paragraph.
 
 
 ----------
@@ -474,13 +490,14 @@ add_action( 'wp_print_scripts', function() {
 }, 1 );
 ```
 
-Difference is not the number of lines of code, difference is also in
+Difference is not only the number of lines of code, difference is also in
 
  - readability
  - the fact that to obtain same result in WordPress is needed to use global variables with undocumented properties, e.g. did you know that a script is printed in footer if the `extra['group']` argument is set to 1? (even if you knew that, sure you didn't learn it from documentation). Even the class of the object we access is named [`_WP_Dependency`](https://developer.wordpress.org/reference/classes/_wp_dependency/) suggesting it is a "private" class. On the contrary, in Occipital everything is done using an expressive, public and documented API.
  - the fact that to make it works in core we need to use a specific hook, where in Occipital there’s a lot of flexibility regarding *timing*.
 
-Regarding Occipital API, in the example above there is a **`getSrc()`** method: it is only one of the getter available for assets objects, there is a getter for every setter, so we have:
+Regarding Occipital API, in the example above there is a **`getSrc()`** method: it is only one of the getter available for assets objects,
+in facts, there is a getter for every setter, so we have:
 
  - `setHandle()` ---> `getHandle()`
  - `setSrc()`  ---> `getSrc()`
@@ -493,7 +510,8 @@ Regarding Occipital API, in the example above there is a **`getSrc()`** method: 
  - `setFooter()` ---> `getFooter()` (only for scripts)
  - `setLocalizeData()` ---> `getLocalizeData()` (only for scripts)
 
-In "[Fluent interface](#fluent-interface)" paragraph there are different names for setters, that's because all setters have a shortened alias without the leading `set` and with first letter lowercased. However, to use "full" setter names in fluent interface is perfectly fair.
+In "[Fluent interface](#fluent-interface)" paragraph there are different names for setters,
+that's because all setters have a *shortened* alias without the leading `set` and with first letter lowercased. However, to use "full" setter names in fluent interface is perfectly fair.
 
 
 ----------
@@ -555,7 +573,8 @@ $data = $script->getLocalizeData();
 
 Reason why it is an array is that `wp_localize_script` (just like `setLocalizeData` in Occipital) can be called more than once on scripts handle, in that case the array will contain more objects.
 
-I can assure that doing same thing with core functions is **not** so easy: did you know that WP stores the localization data for scripts in **string** form (a new-line separated string, in case there were more than one `wp_localize_script` scripts)?
+I can assure you that doing same thing with core functions is **not** so easy: as example,
+did you know that WP stores the localization data for scripts in **string** form (a new-line separated string, in case there were more than one `wp_localize_script` scripts)?
 
 In current Occipital version **only getters can be used** (any setter will change properties on the created object but will not affect behavior of the asset enqueued).
 
@@ -571,9 +590,9 @@ Of course, all the "chainable" setter methods return the same instance (internal
 
 Hower when something goes wrong, any method may return a [`WP_Error`](https://developer.wordpress.org/reference/classes/wp_error/) object.
 
-You may reasonably think that when using [fluent interface](#fluent-interface) if a method at start or in the middle of the methods chain returns an error object, next method will cause a fatal error: well, that **not** true.
+You may reasonably think that when using [fluent interface](#fluent-interface) if a method at start or in the middle of the methods "chain" returns an error object, next method will cause a fatal error: well, that's **not** true.
 
-This little "magic" is done thanks to a custom Error class that extends `WP_Error` making it "chainable": everytime a non-existing method is called on it, an error message is added to object errors stack (`WP_Error` supports multiple errors) then the object return itself.
+This little "magic" is done thanks to a custom Error class that extends `WP_Error` making it "chainable": everitime a non-existing method is called on it, an error message is added to object errors stack (`WP_Error` supports multiple errors) then the object return itself.
 
 Thank to the fact that custom error class extends `WP_Error`, it can be checked via [`is_wp_error`](https://developer.wordpress.org/reference/functions/is_wp_error/) and is capable of run all its methods.
 
@@ -601,12 +620,15 @@ They are:
  - `"brain_assets_done"`
 
 **First three** are specular to WordPress `"wp_enqueue_scripts"`, `"admin_enqueue_scripts"` and `"login_enqueue_scripts"`.
-However, when using Occipital API is possible to add assets in any time that goes from `init` to `wp_print_styles` (when assets going to be printed) so there is no need to use one of this hooks, reason for their existence is that all of them (just like the generic **`"brain_assets_ready"`**, that runs just before any of the first three) pass to hooking callbacks the instance of assets container class `Brain\Occipital\Container` that can be used to add hooks without use the API and other (currently undocumented) advanced operations.
+However, when using Occipital API is possible to add assets at any time that goes from `init` to `wp_print_styles` (when assets going to be printed) so there is no need to use one of this hooks, reason for their existence is that all of them (just like the generic **`"brain_assets_ready"`**, that runs just before any of the first three) pass to hooking callbacks the instance of assets container class `Brain\Occipital\Container` that can be used to add hooks without use the API and other (currently undocumented) advanced operations.
 
 **`"brain_assets_remove"`** and the three  **`"brain_assets_remove_*"`** hooks, as guessable, can be used to remove added assets.
-In fact, to remove an asset, we need to be sure that the function that adds it has been processed. In WordPress, usually, a safe place is `wp_print_styles`, Occipital provides a specific hooks for the scope. The generic one is available everywhere in addition there is one hook for any supported "side".
+In fact, to remove an asset, we need to be sure that the function that adds it has been processed.
+In WordPress, usually, a safe place is `wp_print_styles`, Occipital provides a specific hooks for the scope.
+The generic `"brain_assets_remove"` is available everywhere, moreover there is one hook for any supported "side".
 
-Last hook in the series, "brain_assets_done" is fired when the enqueuing process has been completed. It’s mostly used internally, but it is a safe place to get information about enqueued assets, as example assets whose condition callback have returned a false value have been discarded when that hook is fired.
+Last hook in the series, **`"brain_assets_done"`** is fired when the enqueuing process has been completed.
+It’s mostly used internally, but it is a safe place to get information about enqueued assets, as example assets whose condition callback have returned a false value have been discarded when that hook is fired.
 
 
 ###Printing hooks
@@ -622,6 +644,8 @@ They are:
 
 **`"brain_doing_script"`** is fired immediately **before** a script `<script>` tag is printed to page, and **`"brain_script_done"`** is fired immediate **after** that.
 
+Note that WordPress does not provide nothing similar, and sometimes a feaure like this is required,
+e.g to print a no conflict call immediately after a script has been added.
 
 ----------
 
@@ -632,7 +656,7 @@ Occipital own code is licensed under **GPLv2+**. Through Composer, it installs c
 
 - [Composer](https://getcomposer.org/) (MIT)
 - [Brain](http://giuseppe-mazzapica.github.io/Brain/) (GPLv2+)
-- [Pimple](http://pimple.sensiolabs.org/) (MIT) - required by Brain -
+- [Pimple](http://pimple.sensiolabs.org/) (MIT)
 - [PHPUnit](https://phpunit.de/) (BSD-3-Clause) - only dev install -
 - [Mockery](https://github.com/padraic/mockery) (BSD-3-Clause) - only dev install -
 - [WP_Mock](https://github.com/10up/wp_mock) (GPLv2+) - only dev install -
