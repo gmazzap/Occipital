@@ -15,6 +15,14 @@ However, embed in a theme or in a plugin is just matter of, literally, 3 lines o
 ----------
 
 
+##What's wrong with standard styles and scripts handling in WordPress?
+
+Have a look to related [**blog post**](http://gm.zoomlab.it/2014/whats-wrong-with-styles-and-scripts-in-wordpress/).
+
+
+----------
+
+
 #Features
 
 - Possibility to define, for each asset, which other assets it **provides**, so that WordPress can skip loading them decreasing number of HTTP requests per page.
