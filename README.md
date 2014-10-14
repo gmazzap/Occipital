@@ -654,7 +654,7 @@ They are:
 
 **`"brain_doing_script"`** is fired immediately **before** a script `<script>` tag is printed to page, and **`"brain_script_done"`** is fired immediate **after** that.
 
-Note that WordPress does not provide nothing similar, and sometimes a feaure like this is required,
+Note that WordPress does not provide nothing similar, and sometimes a feature like this is required,
 e.g to print a no conflict call immediately after a script has been added.
 
 ----------
