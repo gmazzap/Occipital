@@ -1,8 +1,8 @@
 {
     "name": "brain/occipital",
     "description": "Occipital is a package for asset management in WordPress.",
-    "keywords": ["wordpress"],
-    "homepage": "https://github.com/Giuseppe-Mazzapica/Cortex",
+    "keywords": ["wordpress", "styles", "scripts"],
+    "homepage": "https://github.com/Giuseppe-Mazzapica/Occipital",
     "license": "GPL-2.0+",
     "authors": [
         {
@@ -13,8 +13,8 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/Giuseppe-Mazzapica/Cortex/issues",
-        "source": "https://github.com/Giuseppe-Mazzapica/Cortex"
+        "issues": "https://github.com/Giuseppe-Mazzapica/Occipital/issues",
+        "source": "https://github.com/Giuseppe-Mazzapica/Occipital"
     },
     "require": {
         "php": ">=5.4",
