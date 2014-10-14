@@ -3,6 +3,8 @@ Occipital
 
 ![Occipital](https://googledrive.com/host/0Bxo4bHbWEkMscmJNYkx6YXctaWM/occipital.png)
 
+[![Build Status](https://travis-ci.org/Giuseppe-Mazzapica/Occipital.svg?branch=master)](https://travis-ci.org/Giuseppe-Mazzapica/Occipital)
+
 Occipital is a [**Brain**](http://giuseppe-mazzapica.github.io/Brain/) module for **style and scripts management**.
 
 It allows a better way to enqueue scripts and styles in WordPress.
