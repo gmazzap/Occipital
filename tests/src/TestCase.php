@@ -9,7 +9,7 @@ class TestCase extends \PHPUnit_Framework_TestCase {
         $wp_scripts = new \WP_Scripts;
         $wp_styles = new \WP_Styles;
         \WP_Mock::setUp();
-        Brain::boot( new \Pimple, FALSE );
+        Brain::boot( new \Pimple\Container, FALSE );
     }
 
     public function tearDown() {
