@@ -18,8 +18,8 @@
     },
     "require": {
         "php": ">=5.4",
-        "brain/brain": "dev-master",
-        "brain/support": "dev-master"
+        "brain/brain": "~0.1.0",
+        "brain/support": "~0.1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "3.7.*",
